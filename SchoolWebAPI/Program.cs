@@ -1,4 +1,10 @@
+using Microsoft.EntityFrameworkCore;
+using SchoolWebAPI.Data;
+using SchoolWebAPI.Models;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<MyDataContext>(opt => opt.UseInMemoryDatabase("Student"));
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -35,6 +41,55 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast")
 .WithOpenApi();
+
+// Student API.
+
+app.MapPost("/Student", async (Student student, MyDataContext db) => 
+{ 
+    db.Students.Add(student);
+    await db.SaveChangesAsync();
+
+    return Results.Ok();
+});
+
+app.MapGet("/Student/{id}", async (int id, MyDataContext db) => 
+{
+    var student = await db.Students.FindAsync(id);
+
+    if (student != null) return Results.Ok(student);
+    else return Results.NotFound();    
+});
+
+app.MapGet("/Student", async (MyDataContext db) => await db.Students.ToListAsync());
+
+app.MapPut("/Student/{id}", async (int id, Student newDataStudent, MyDataContext db) => 
+{ 
+   var student = await db.Students.FindAsync(id);
+    if (student == null) return Results.NotFound();
+    else 
+    { 
+        student.Name = newDataStudent.Name;
+        student.Email = newDataStudent.Email;
+        student.Phone = newDataStudent.Phone;
+
+        return Results.Ok();
+    };
+});
+
+app.MapDelete("/Student/{id}", async (int id, MyDataContext db) => 
+{ 
+    var student = await db.Students.FindAsync(id);
+    if (student == null) return Results.NotFound();
+    else 
+    {
+        db.Students.Remove(student);
+
+        await db.SaveChangesAsync();
+
+        return Results.Ok();
+    };
+
+});
 
 app.Run();
 
