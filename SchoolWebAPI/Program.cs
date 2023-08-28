@@ -1,14 +1,9 @@
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SchoolWebAPI.Data;
 using SchoolWebAPI.Entities;
 using SchoolWebAPI.Models.Student;
 using SchoolWebAPI.Models.Course;
 using SchoolWebAPI.Models.Teacher;
-using System.Text.Json.Serialization;
-using System.Text.Json;
-using Microsoft.AspNetCore.Http.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -272,6 +267,17 @@ app.MapGet("/Course/{id}/Teachers", async (int id, MyDataContext db) =>
     }
 });
 
+app.MapGet("/Course/{id}/Content", async (int id, MyDataContext db) =>
+{
+    var course = await db.Courses.FindAsync(id);
+
+    if (course == null) return Results.NotFound();    
+    else 
+        if (course.Content != null)
+           return Results.Ok(course.Content.Description);
+        else return Results.NoContent();    
+});
+
 app.MapPut("/Course/{id}", async (int id, CoursePostDTO coursePostDTO, MyDataContext db) =>
 {
     var course = await db.Courses.FindAsync(id);
@@ -305,7 +311,7 @@ app.MapDelete("/Course/{id}", async (int id, MyDataContext db) =>
 });
 
 //--------------------------
-// -- Student API -----------
+// -- Student API ----------
 //--------------------------
 
 app.MapPost("/Student/Inicializar", async (MyDataContext db) =>
@@ -384,10 +390,42 @@ app.MapGet("/Students", async (MyDataContext db) =>
     return Results.Ok(studentsListDTO);
 });
 
-//app.MapGet("/Students/{id}/OpenCourses", async (int id, MyDataContext db) => 
-//{ 
+app.MapGet("/Students/{id}/Inscriptions", async (int id, MyDataContext db) => 
+{
+    var student = db.Students.Include(c => c.Inscriptions).Where(t => t.Id == id).FirstOrDefault();
 
-//});
+    if (student == null) return Results.NotFound();
+    else
+    {
+        var studentInscriptionsGetDTO = new List<StudentInscriptionGetDTO>();
+
+        foreach (var inscription in student.Inscriptions)
+        {
+            var courseGetDTO = new CourseGetDTO();
+
+            courseGetDTO.Id = inscription.OpenCourse.CourseId;
+            courseGetDTO.Name = inscription.OpenCourse.Course.Name;
+            courseGetDTO.Code = inscription.OpenCourse.Course.Code;
+            courseGetDTO.Description = inscription.OpenCourse.Course.Description;
+
+            var teacherGetDTO = new TeacherGetDTO();
+
+            teacherGetDTO.Id = inscription.OpenCourse.TeacherId;
+            teacherGetDTO.Name = inscription.OpenCourse.Teacher.Name;
+            teacherGetDTO.Email = inscription.OpenCourse.Teacher.Email;
+            teacherGetDTO.Phone = inscription.OpenCourse.Teacher.Phone;
+
+            var studentInscriptionGetDTO = new StudentInscriptionGetDTO();
+
+            studentInscriptionGetDTO.Course = courseGetDTO;
+            studentInscriptionGetDTO.Teacher = teacherGetDTO;
+
+            studentInscriptionsGetDTO.Add(studentInscriptionGetDTO);
+        }
+
+        return Results.Ok(studentInscriptionsGetDTO);
+    }
+});
 
 app.MapPut("/Student/{id}", async (int id, StudentPostDTO studentPostDTO, MyDataContext db) => 
 { 
@@ -427,6 +465,8 @@ app.MapDelete("/Student/{id}", async (int id, MyDataContext db) =>
 
 app.MapPost("/OpenCourse/Course/{courseId}/Teacher/{teacherId}", async (int courseId, int teacherId, MyDataContext db) =>
 {
+    // Vertificar antes si ya existe esa dupla.
+
     var course = await db.Courses.FindAsync(courseId);
 
     if (course == null) return Results.BadRequest();
@@ -492,29 +532,34 @@ app.MapDelete("/OpenCourse/Course/{courseId}/Teacher/{teacherId}", async (int co
 });
 
 //--------------------------
-// -- Inscription API -------
+// -- Inscription API ------
 //--------------------------
 
 app.MapPost("/Inscription/Course/{courseId}/Teacher/{teacherId}/Student/{studentId}", async (int courseId, int teacherId, int studentId, MyDataContext db) =>
 {
-    var course = await db.Courses.FindAsync(courseId);
-
-    if (course == null) return Results.BadRequest();
-
-    var teacher = await db.Teachers.FindAsync(teacherId);
-
-    if (teacher == null) return Results.BadRequest();
-
+    //Verificar antes si ya existe esa terna.
+    
     var student = await db.Students.FindAsync(studentId);
 
     if (student == null) return Results.BadRequest();
 
-    var openCourse = new OpenCourse();
+    var openCourse = db.OpenCourses.Include(c => c.Course).Include(c => c.Teacher).Where(t => (t.TeacherId == teacherId) && (t.CourseId == courseId)).FirstOrDefault();
 
-    openCourse.CourseId = courseId;
-    openCourse.TeacherId = teacherId;
-    openCourse.Course = course;
-    openCourse.Teacher = teacher;
+    if (openCourse == null) return Results.BadRequest();
+
+    var courseGetDTO = new CourseGetDTO();
+
+    courseGetDTO.Id = courseId;
+    courseGetDTO.Name = openCourse.Course.Name;
+    courseGetDTO.Code = openCourse.Course.Code;
+    courseGetDTO.Description = openCourse.Course.Description;
+    
+    var teacherGetDTO = new TeacherGetDTO();
+
+    teacherGetDTO.Id = teacherId;
+    teacherGetDTO.Name = openCourse.Teacher.Name;   
+    teacherGetDTO.Email = openCourse.Teacher.Email; 
+    teacherGetDTO.Phone = openCourse.Teacher.Phone;
 
     var inscription = new Inscription();
     
@@ -536,11 +581,32 @@ app.MapGet("/Inscription/Course/{courseId}/Teacher/{teacherId}/Student/{studentI
 
     if (inscription == null) return Results.BadRequest();
 
+    var courseGetDTO = new CourseGetDTO();
+
+    courseGetDTO.Id = courseId;
+    courseGetDTO.Name = inscription.OpenCourse.Course.Name;
+    courseGetDTO.Code = inscription.OpenCourse.Course.Code;
+    courseGetDTO.Description = inscription.OpenCourse.Course.Description;
+
+    var teacherGetDTO = new TeacherGetDTO();
+
+    teacherGetDTO.Id = teacherId;
+    teacherGetDTO.Name = inscription.OpenCourse.Teacher.Name;
+    teacherGetDTO.Email = inscription.OpenCourse.Teacher.Email;
+    teacherGetDTO.Phone = inscription.OpenCourse.Teacher.Phone;
+
+    var studentGetDTO = new StudentGetDTO();
+
+    studentGetDTO.Id = studentId;
+    studentGetDTO.Name = inscription.Student.Name;
+    studentGetDTO.Email = inscription.Student.Email; 
+    studentGetDTO.Phone = inscription.Student.Phone;
+
     var inscriptionGetDTO = new SchoolWebAPI.Models.Inscription.InscriptionGetDTO();
 
-    inscriptionGetDTO.Course = inscription.OpenCourse.Course;
-    inscriptionGetDTO.Teacher = inscription.OpenCourse.Teacher;
-    inscriptionGetDTO.Student = inscription.Student;
+    inscriptionGetDTO.Course = courseGetDTO;
+    inscriptionGetDTO.Teacher = teacherGetDTO;
+    inscriptionGetDTO.Student = studentGetDTO;
 
     return Results.Ok(inscriptionGetDTO);
 });

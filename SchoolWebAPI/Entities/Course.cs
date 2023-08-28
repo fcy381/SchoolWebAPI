@@ -13,5 +13,7 @@
         public List<Teacher> Teachers { get; } = new();
 
         public List<OpenCourse> OpenCourses { get; } = new();
+
+        public Content?   Content { get; set; }
     }
 }

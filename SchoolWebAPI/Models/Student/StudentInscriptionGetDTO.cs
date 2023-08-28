@@ -1,15 +1,12 @@
 ﻿using SchoolWebAPI.Models.Course;
-using SchoolWebAPI.Models.Student;
 using SchoolWebAPI.Models.Teacher;
 
-namespace SchoolWebAPI.Models.Inscription
+namespace SchoolWebAPI.Models.Student
 {
-    public class InscriptionGetDTO
+    public class StudentInscriptionGetDTO
     {
         public CourseGetDTO Course { get; set; } = null!;
 
         public TeacherGetDTO Teacher { get; set; } = null!;
-
-        public StudentGetDTO Student { get; set; } = null!;
     }
 }
