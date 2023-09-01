@@ -4,6 +4,7 @@ using SchoolWebAPI.Entities;
 using SchoolWebAPI.Models.Student;
 using SchoolWebAPI.Models.Course;
 using SchoolWebAPI.Models.Teacher;
+using SchoolWebAPI.Models.AcademiArea;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -203,6 +204,28 @@ app.MapPost("/Course", async (CoursePostDTO coursePostDTO, MyDataContext db) =>
     return Results.Ok();
 });
 
+app.MapPost("/Course/{id}/ProgramContent/Description", async (int id,string description, MyDataContext db) =>
+{
+    var course = await db.Courses.FindAsync(id);
+
+    if (course == null) return Results.NotFound();
+    else
+        if (description != null)
+        {
+            var programContent = new ProgramContent();
+            programContent.Description = description;
+            programContent.Course = course;
+            programContent.CourseId = course.Id;
+        
+            course.ProgramContent = programContent;
+
+            await db.SaveChangesAsync();
+            
+            return Results.Ok();
+        }        
+        else return Results.BadRequest();
+});
+
 app.MapGet("/Course/{id}", async (int id, MyDataContext db) =>
 {
     var course = await db.Courses.FindAsync(id);
@@ -267,14 +290,14 @@ app.MapGet("/Course/{id}/Teachers", async (int id, MyDataContext db) =>
     }
 });
 
-app.MapGet("/Course/{id}/Content", async (int id, MyDataContext db) =>
+app.MapGet("/Course/{id}/ProgramContent/Description", async (int id, MyDataContext db) =>
 {
-    var course = await db.Courses.FindAsync(id);
+    var course = await db.Courses.Include(c => c.ProgramContent).SingleOrDefaultAsync(i => i.Id == id);
 
     if (course == null) return Results.NotFound();    
     else 
-        if (course.Content != null)
-           return Results.Ok(course.Content.Description);
+        if (course.ProgramContent != null)
+           return Results.Ok(course.ProgramContent.Description);
         else return Results.NoContent();    
 });
 
@@ -392,7 +415,14 @@ app.MapGet("/Students", async (MyDataContext db) =>
 
 app.MapGet("/Students/{id}/Inscriptions", async (int id, MyDataContext db) => 
 {
-    var student = db.Students.Include(c => c.Inscriptions).Where(t => t.Id == id).FirstOrDefault();
+    var student = db.Students
+                .Include(i => i.Inscriptions)
+                    .ThenInclude(o => o.OpenCourse)
+                        .ThenInclude(c => c.Course)
+                .Include(i => i.Inscriptions)
+                    .ThenInclude(o => o.OpenCourse)
+                        .ThenInclude(t => t.Teacher)
+                .Where(s => s.Id == id).FirstOrDefault();
 
     if (student == null) return Results.NotFound();
     else
@@ -627,4 +657,131 @@ app.MapDelete("/Take/Course/{courseId}/Teacher/{teacherId}/Student/{studentId}",
 });
 
 app.Run();
+
+//--------------------------
+// -- Academic Area API ------
+//--------------------------
+
+app.MapPost("/AcademicArea/Inicializar", async (MyDataContext db) =>
+{
+    var firstAcademicArea = new AcademicArea
+    {
+        Name = "Área Ciencias Informáticas",        
+    };
+    await db.AcademicAreas.AddAsync(firstAcademicArea);
+
+    var secondAcademicArea = new AcademicArea
+    {
+        Name = "Área Ciencias Matemáticas",
+    };
+    await db.AcademicAreas.AddAsync(secondAcademicArea);
+
+    await db.SaveChangesAsync();
+
+    return Results.Ok();
+});
+
+app.MapPost("/AcademicArea", async (AcademiAreaPostDTO academicAreaPostDTO, MyDataContext db) =>
+{
+    var academiArea = new AcademicArea();
+
+    academiArea.Name = academicAreaPostDTO.Name;
+    
+    await db.AcademicAreas.AddAsync(academiArea);
+    await db.SaveChangesAsync();
+
+    return Results.Ok();
+});
+
+app.MapGet("/AcademicArea/{id}", async (int id, MyDataContext db) =>
+{
+    var academicArea = await db.AcademicAreas.FindAsync(id);
+
+    if (academicArea == null) return Results.NotFound();
+    else
+    {
+        var academicAreaGetDTO = new AcademicAreaGetDTO();
+
+        academicAreaGetDTO.Id = academicArea.Id;
+        academicAreaGetDTO.Name = academicArea.Name;
+
+        return Results.Ok(academicAreaGetDTO);
+    }
+});
+
+app.MapGet("/AcademicAreas", async (MyDataContext db) =>
+{
+    var academicAreas = await db.AcademicAreas.ToListAsync();
+
+    var academicAreasListDTO = new List<AcademicAreaGetDTO>();
+
+    foreach (var aa in academicAreas)
+    {
+        var academicAreaGetDTO = new AcademicAreaGetDTO();
+
+        academicAreaGetDTO.Id = aa.Id;
+        academicAreaGetDTO.Name = aa.Name;
+
+        academicAreasListDTO.Add(academicAreaGetDTO);
+    }
+
+    return Results.Ok(academicAreasListDTO);
+});
+
+app.MapGet("/AcademicAreas/{id}/Courses", async (int id, MyDataContext db) =>
+{
+    var academicArea = db.AcademicAreas
+                .Include(i => i.Courses)                    
+                .Where(s => s.Id == id).FirstOrDefault();
+
+    if (academicArea == null) return Results.NotFound();
+    else
+    {
+        var courseListGetDTO = new List<CourseGetDTO>();
+
+        foreach (var course in academicArea.Courses)
+        {
+            var courseGetDTO = new CourseGetDTO();
+
+            courseGetDTO.Id = course.Id;
+            courseGetDTO.Name = course.Name;
+            courseGetDTO.Code = course.Code;
+            courseGetDTO.Description = course.Description;
+
+            courseListGetDTO.Add(courseGetDTO);            
+        }
+
+        return Results.Ok(courseListGetDTO);
+    }
+});
+
+app.MapPut("/AcademicArea/{id}", async (int id, AcademiAreaPostDTO academicAreaPostDTO, MyDataContext db) =>
+{
+    var academicArea = await db.AcademicAreas.FindAsync(id);
+
+    if (academicArea == null) return Results.NotFound();
+    else
+    {
+        academicArea.Name = academicAreaPostDTO.Name;
+
+        await db.SaveChangesAsync();
+
+        return Results.Ok();
+    };
+});
+
+app.MapDelete("/AcademicArea/{id}", async (int id, MyDataContext db) =>
+{
+    var academicArea = await db.AcademicAreas.FindAsync(id);
+
+    if (academicArea == null) return Results.NotFound();
+    else
+    {
+        db.AcademicAreas.Remove(academicArea);
+
+        await db.SaveChangesAsync();
+
+        return Results.Ok();
+    };
+});
 

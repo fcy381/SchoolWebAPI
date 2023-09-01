@@ -1,6 +1,6 @@
 ﻿namespace SchoolWebAPI.Entities
 {
-    public class Content
+    public class ProgramContent
     {
         public int Id { get; set; }
 

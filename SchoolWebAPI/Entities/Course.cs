@@ -1,4 +1,6 @@
-﻿namespace SchoolWebAPI.Entities
+﻿using System.Reflection.Metadata;
+
+namespace SchoolWebAPI.Entities
 {
     public class Course
     {
@@ -14,6 +16,10 @@
 
         public List<OpenCourse> OpenCourses { get; } = new();
 
-        public Content?   Content { get; set; }
+        public ProgramContent?   ProgramContent { get; set; }
+
+        public int? AcademicAreaId { get; set; } 
+
+        public AcademicArea? AcademicArea { get; set; } 
     }
 }

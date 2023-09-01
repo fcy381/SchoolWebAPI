@@ -27,11 +27,16 @@ namespace SchoolWebAPI.Data
                     s => s.HasOne<Student>().WithMany(e => e.Inscriptions).HasForeignKey(e => e.StudentId));
 
             modelBuilder.Entity<Course>()
-                .HasOne(e => e.Content)
+                .HasOne(e => e.ProgramContent)
                 .WithOne(e => e.Course)
-                .HasForeignKey<Content>(e => e.CourseId)
+                .HasForeignKey<ProgramContent>(e => e.CourseId)
                 .IsRequired();
-                
+
+            modelBuilder.Entity<AcademicArea>()
+                .HasMany(e => e.Courses)
+                .WithOne(e => e.AcademicArea)
+                .HasForeignKey(e => e.AcademicAreaId)
+               .IsRequired(false);
         }
 
         public DbSet<Student> Students { get; set; }
@@ -44,8 +49,8 @@ namespace SchoolWebAPI.Data
 
         public DbSet<Inscription> Inscriptions { get; set; }
 
-        public DbSet<Content> Contents { get; set; }
+        public DbSet<ProgramContent> ProgramContents { get; set; }
 
-        public DbSet<AcademicArea> AcademicsAreas { get; set; }
+        public DbSet<AcademicArea> AcademicAreas { get; set; }
     }    
 }
