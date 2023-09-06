@@ -31,6 +31,495 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 //--------------------------
+// -- Student API ----------
+//--------------------------
+
+app.MapPost("/Student/Inicializar", async (MyDataContext db) =>
+{
+    var firstStudent = new Student
+    {
+        Name = "Sebastián Montemaggiore",
+        Email = "sebastianmontemaggiore@gmail.com",
+        Phone = "291544512"
+    };
+    await db.Students.AddAsync(firstStudent);
+
+    var secondStudent = new Student
+    {
+        Name = "Esteban Gonzalez",
+        Email = "estebangonzalez@gmail.com",
+        Phone = "291544536"
+    };
+    await db.Students.AddAsync(secondStudent);
+
+    await db.SaveChangesAsync();
+
+    return Results.Ok();
+});
+
+app.MapPost("/Student", async (StudentPostDTO studentPostDTO, MyDataContext db, IMapper mapper) =>
+{
+    //var student = new Student();
+
+    var student = mapper.Map<Student>(studentPostDTO);
+
+    //student.Name = studentPostDTO.Name;
+    //student.Email = studentPostDTO.Email;
+    //student.Phone = studentPostDTO.Phone;
+
+    await db.Students.AddAsync(student);
+    await db.SaveChangesAsync();
+
+    return Results.Ok();
+});
+
+app.MapGet("/Student/{id}", async (int id, MyDataContext db, IMapper mapper) =>
+{
+    var student = await db.Students.FindAsync(id);
+
+    if (student == null) return Results.NotFound();
+    else
+    {
+        var studentGetDTO = new StudentGetDTO();
+
+        studentGetDTO = mapper.Map<StudentGetDTO>(student);
+
+        //studentGetDTO.Id = student.Id;
+        //studentGetDTO.Name = student.Name;
+        //studentGetDTO.Email = student.Email;
+        //studentGetDTO.Phone = student.Phone;
+
+        return Results.Ok(studentGetDTO);
+    }
+});
+
+app.MapGet("/Students", async (MyDataContext db, IMapper mapper) =>
+{
+    var students = await db.Students.ToListAsync();
+
+    var studentsListDTO = new List<StudentGetDTO>();
+
+    foreach (var stdt in students)
+    {
+        var studentGetDTO = new StudentGetDTO();
+
+        studentGetDTO = mapper.Map<StudentGetDTO>(stdt);
+
+        //studentGetDTO.Id = stdt.Id;
+        //studentGetDTO.Name = stdt.Name;
+        //studentGetDTO.Email = stdt.Email;
+        //studentGetDTO.Phone = stdt.Phone;
+
+        studentsListDTO.Add(studentGetDTO);
+    }
+
+    return Results.Ok(studentsListDTO);
+});
+
+app.MapGet("/Students/{id}/Inscriptions", async (int id, MyDataContext db, IMapper mapper) =>
+{
+    var student = db.Students
+                .Include(i => i.Inscriptions)
+                    .ThenInclude(o => o.OpenCourse)
+                        .ThenInclude(c => c.Course)
+                .Include(i => i.Inscriptions)
+                    .ThenInclude(o => o.OpenCourse)
+                        .ThenInclude(t => t.Teacher)
+                .Where(s => s.Id == id).FirstOrDefault();
+
+    if (student == null) return Results.NotFound();
+    else
+    {
+        var studentInscriptionsGetDTO = new List<StudentInscriptionGetDTO>();
+
+        foreach (var inscription in student.Inscriptions)
+        {
+            //var courseGetDTO = new CourseGetDTO();
+
+            //courseGetDTO = mapper.Map<CourseGetDTO>(inscription.OpenCourse.Course);
+
+            //var teacherGetDTO = new TeacherGetDTO();
+
+            //teacherGetDTO = mapper.Map<TeacherGetDTO>(inscription.OpenCourse.Teacher);
+
+            //var studentInscriptionGetDTO = new StudentInscriptionGetDTO();
+
+            //studentInscriptionGetDTO.Course = courseGetDTO;
+            //studentInscriptionGetDTO.Teacher = teacherGetDTO;
+
+            var studentInscriptionGetDTO = mapper.Map<StudentInscriptionGetDTO>(inscription);
+
+            studentInscriptionsGetDTO.Add(studentInscriptionGetDTO);
+        }
+
+        return Results.Ok(studentInscriptionsGetDTO);
+    }
+});
+
+app.MapPut("/Student/{id}", async (int id, StudentPostDTO studentPostDTO, MyDataContext db, IMapper mapper) =>
+{
+    var student = await db.Students.FindAsync(id);
+
+    if (student == null) return Results.NotFound();
+    else
+    {
+        // Lo siguiente crea un nuevo objeto y luego hace un mapeo.
+        //student = mapper.Map<Student>(studentPostDTO);
+
+        // Para que no se cree un nuevo objeto debo utilizar la siguiente sobrecarga del método Map.
+        student = mapper.Map<StudentPostDTO, Student>(studentPostDTO, student);
+
+        //student.Name = studentPostDTO.Name;
+        //student.Email = studentPostDTO.Email;
+        //student.Phone = studentPostDTO.Phone;
+
+        await db.SaveChangesAsync();
+
+        return Results.Ok();
+    };
+});
+
+app.MapDelete("/Student/{id}", async (int id, MyDataContext db) =>
+{
+    var student = await db.Students.FindAsync(id);
+
+    if (student == null) return Results.NotFound();
+    else
+    {
+        db.Students.Remove(student);
+
+        await db.SaveChangesAsync();
+
+        return Results.Ok();
+    };
+});
+
+//--------------------------
+// -- Teacher API ----------
+//--------------------------
+
+app.MapPost("/Teacher/Inicializar", async (MyDataContext db) =>
+{
+    var firstTeacher = new Teacher
+    {
+        Name = "Martín Bernal",
+        Email = "martinbernal@gmail.com",
+        Phone = "291547889"
+    };
+    await db.Teachers.AddAsync(firstTeacher);
+
+    var secondTeacher = new Teacher
+    {
+        Name = "Pablo García",
+        Email = "pablogarcia@gmail.com",
+        Phone = "291542563"
+    };
+    await db.Teachers.AddAsync(secondTeacher);
+
+    await db.SaveChangesAsync();
+
+    return Results.Ok();
+});
+
+app.MapPost("/Teacher", async (TeacherPostDTO teacherPostDTO, MyDataContext db, IMapper mapper) =>
+{
+    //var teacher = new Teacher();
+
+    var teacher = mapper.Map<Teacher>(teacherPostDTO);
+
+    //teacher.Name = teacherPostDTO.Name;
+    //teacher.Email = teacherPostDTO.Email;
+    //teacher.Phone = teacherPostDTO.Phone;
+
+    await db.Teachers.AddAsync(teacher);
+    await db.SaveChangesAsync();
+
+    return Results.Ok();
+});
+
+app.MapGet("/Teacher/{id}", async (int id, MyDataContext db, IMapper mapper) =>
+{
+    var teacher = await db.Teachers.FindAsync(id);
+
+    if (teacher == null) return Results.NotFound();
+    else
+    {
+        var teacherGetDTO = new TeacherGetDTO();
+
+        teacherGetDTO = mapper.Map<TeacherGetDTO>(teacher);
+
+        //teacherGetDTO.Id = teacher.Id;
+        //teacherGetDTO.Name = teacher.Name;
+        //teacherGetDTO.Email = teacher.Email;
+        //teacherGetDTO.Phone = teacher.Phone;
+
+        return Results.Ok(teacherGetDTO);
+    }
+});
+
+app.MapGet("/Teachers", async (MyDataContext db, IMapper mapper) =>
+{
+    var teachers = await db.Teachers.ToListAsync();
+
+    var teachersListDTO = new List<TeacherGetDTO>();
+
+    foreach (var teacher in teachers)
+    {
+        var teacherGetDTO = new TeacherGetDTO();
+
+        teacherGetDTO = mapper.Map<TeacherGetDTO>(teacher);
+
+        //teacherGetDTO.Id = teacher.Id;
+        //teacherGetDTO.Name = teacher.Name;
+        //teacherGetDTO.Email = teacher.Email;
+        //teacherGetDTO.Phone = teacher.Phone;
+
+        teachersListDTO.Add(teacherGetDTO);
+    }
+
+    return Results.Ok(teachersListDTO);
+});
+
+app.MapGet("/Teacher/{id}/Courses", async (int id, MyDataContext db, IMapper mapper) =>
+{
+    var teacher = db.Teachers.Include(c => c.Courses).Where(t => t.Id == id).FirstOrDefault();
+
+    if (teacher == null) return Results.NotFound();
+    else
+    {
+        var coursesListDTO = new List<CourseGetDTO>();
+
+        foreach (var course in teacher.Courses)
+        {
+            var courseGetDTO = new CourseGetDTO();
+
+            courseGetDTO = mapper.Map<CourseGetDTO>(course);
+
+            //courseGetDTO.Id = course.Id;
+            //courseGetDTO.Name = course.Name;
+            //courseGetDTO.Code = course.Code;
+            //courseGetDTO.Description = course.Description;
+
+            coursesListDTO.Add(courseGetDTO);
+        }
+
+        return Results.Ok(coursesListDTO);
+    }
+});
+
+app.MapPut("/Teacher/{id}", async (int id, TeacherPostDTO teacherPostDTO, MyDataContext db, IMapper mapper) =>
+{
+    var teacher = await db.Teachers.FindAsync(id);
+
+    if (teacher == null) return Results.NotFound();
+    else
+    {
+        //teacher = mapper.Map<Teacher>(teacherPostDTO);
+
+        teacher = mapper.Map<TeacherPostDTO, Teacher>(teacherPostDTO, teacher);
+
+        //teacher.Name = teacherPostDTO.Name;
+        //teacher.Email = teacherPostDTO.Email;
+        //teacher.Phone = teacherPostDTO.Phone;
+
+        await db.SaveChangesAsync();
+
+        return Results.Ok();
+    };
+});
+
+app.MapDelete("/Teacher/{id}", async (int id, MyDataContext db) =>
+{
+    var teacher = await db.Teachers.FindAsync(id);
+
+    if (teacher == null) return Results.NotFound();
+    else
+    {
+        db.Teachers.Remove(teacher);
+
+        await db.SaveChangesAsync();
+
+        return Results.Ok();
+    };
+});
+
+//--------------------------
+// -- Course API -----------
+//--------------------------
+
+app.MapPost("/Course/Inicializar", async (MyDataContext db) =>
+{
+    var firstCourse = new Course
+    {
+        Name = "Git I",
+        Code = "AA1",
+        Description = "Curso que permite comprender los conceptos básicos del control de versiones, y para ello hace uso de un fremework de versionado concreto que es llamado GIT."
+    };
+    await db.Courses.AddAsync(firstCourse);
+
+    var secondCourse = new Course
+    {
+        Name = "C# I",
+        Code = "AA2",
+        Description = "Curso que permite comprender los conceptos básicos del lenguaje C#."
+    };
+    await db.Courses.AddAsync(secondCourse);
+
+    await db.SaveChangesAsync();
+
+    return Results.Ok();
+});
+
+app.MapPost("/Course", async (CoursePostDTO coursePostDTO, MyDataContext db, IMapper mapper) =>
+{
+    //var course = new Course();
+
+    var course = mapper.Map<Course>(coursePostDTO);
+
+    //course.Name = coursePostDTO.Name;
+    //course.Code = coursePostDTO.Code;
+    //course.Description = coursePostDTO.Description;
+
+    await db.Courses.AddAsync(course);
+    await db.SaveChangesAsync();
+
+    return Results.Ok();
+});
+
+app.MapGet("/Course/{id}", async (int id, MyDataContext db, IMapper mapper) =>
+{
+    var course = await db.Courses.FindAsync(id);
+
+    if (course == null) return Results.NotFound();
+    else
+    {
+        var courseGetDTO = new CourseGetDTO();
+
+        courseGetDTO = mapper.Map<CourseGetDTO>(course);
+
+        //courseGetDTO.Id = course.Id;
+        //courseGetDTO.Name = course.Name;
+        //courseGetDTO.Code = course.Code;
+        //courseGetDTO.Description = course.Description;
+
+        return Results.Ok(courseGetDTO);
+    }
+});
+
+app.MapGet("/Courses", async (MyDataContext db, IMapper mapper) =>
+{
+    var courses = await db.Courses.ToListAsync();
+
+    var coursesListDTO = new List<CourseGetDTO>();
+
+    foreach (var course in courses)
+    {
+        var courseGetDTO = new CourseGetDTO();
+
+        courseGetDTO = mapper.Map<CourseGetDTO>(course);
+
+        //courseGetDTO.Id = course.Id;
+        //courseGetDTO.Name = course.Name;
+        //courseGetDTO.Code = course.Code;
+        //courseGetDTO.Description = course.Description;
+
+        coursesListDTO.Add(courseGetDTO);
+    }
+
+    return Results.Ok(coursesListDTO);
+});
+
+app.MapGet("/Course/{id}/Teachers", async (int id, MyDataContext db, IMapper mapper) =>
+{
+    var course = db.Courses.Include(t => t.Teachers).Where(c => c.Id == id).FirstOrDefault();
+
+    if (course == null) return Results.NotFound();
+    else
+    {
+        var teachersListDTO = new List<TeacherGetDTO>();
+
+        foreach (var teacher in course.Teachers)
+        {
+            var teacherGetDTO = new TeacherGetDTO();
+
+            teacherGetDTO = mapper.Map<TeacherGetDTO>(teacher);
+
+            //teacherGetDTO.Id = teacher.Id;
+            //teacherGetDTO.Name = teacher.Name;
+            //teacherGetDTO.Email = teacher.Email;
+            //teacherGetDTO.Phone = teacher.Phone;
+
+            teachersListDTO.Add(teacherGetDTO);
+        }
+
+        return Results.Ok(teachersListDTO);
+    }
+});
+
+app.MapGet("/Course/{id}/ProgramContent", async (int id, MyDataContext db, IMapper mapper) =>
+{
+    var course = await db.Courses.Include(c => c.ProgramContent).SingleOrDefaultAsync(i => i.Id == id);
+
+    if (course == null) return Results.NotFound();
+    else
+        if (course.ProgramContent != null)
+        {
+            var courseProgramContentGetDTO = mapper.Map<CourseProgramContentGetDTO>(course.ProgramContent);
+
+            return Results.Ok(courseProgramContentGetDTO); 
+        } else return Results.NoContent();
+});
+
+app.MapGet("/Course/{id}/AcademicArea", async (int id, MyDataContext db, IMapper mapper) =>
+{
+    var course = await db.Courses.Include(c => c.AcademicArea).SingleOrDefaultAsync(i => i.Id == id);
+
+    if (course == null) return Results.NotFound();
+    else
+        if (course.AcademicArea != null)
+        {
+        var courseAcademicArea = mapper.Map<AcademicArea>(course.AcademicArea);
+            return Results.Ok(courseAcademicArea); 
+        } else return Results.NoContent();
+});
+
+app.MapPut("/Course/{id}", async (int id, CoursePostDTO coursePostDTO, MyDataContext db, IMapper mapper) =>
+{
+    var course = await db.Courses.FindAsync(id);
+
+    if (course == null) return Results.NotFound();
+    else
+    {
+        //course = mapper.Map<Course>(coursePostDTO);
+
+        course = mapper.Map<CoursePostDTO, Course>(coursePostDTO, course);
+
+        //course.Name = coursePostDTO.Name;
+        //course.Code = coursePostDTO.Code;
+        //course.Description = coursePostDTO.Description;
+
+        await db.SaveChangesAsync();
+
+        return Results.Ok();
+    };
+});
+
+app.MapDelete("/Course/{id}", async (int id, MyDataContext db) =>
+{
+    var course = await db.Courses.FindAsync(id);
+
+    if (course == null) return Results.NotFound();
+    else
+    {
+        db.Courses.Remove(course);
+
+        await db.SaveChangesAsync();
+
+        return Results.Ok();
+    };
+});
+
+//--------------------------
 // -- Academic Area API ------
 //--------------------------
 
@@ -55,9 +544,9 @@ app.MapPost("/AcademicArea/Inicializar", async (MyDataContext db) =>
 
 app.MapPost("/AcademicArea", async (AcademiAreaPostDTO academicAreaPostDTO, MyDataContext db, IMapper mapper) =>
 {
-    var academicArea = new AcademicArea();
+    //var academicArea = new AcademicArea();
 
-    academicArea = mapper.Map<AcademicArea>(academicAreaPostDTO);
+    var academicArea = mapper.Map<AcademicArea>(academicAreaPostDTO);
 
     //academicArea.Name = academicAreaPostDTO.Name;
 
@@ -160,7 +649,9 @@ app.MapPut("/AcademicArea/{id}", async (int id, AcademiAreaPostDTO academicAreaP
     if (academicArea == null) return Results.NotFound();
     else
     {
-        academicArea = mapper.Map<AcademicArea>(academicAreaPostDTO);
+        //academicArea = mapper.Map<AcademicArea>(academicAreaPostDTO);
+
+        academicArea = mapper.Map<AcademiAreaPostDTO, AcademicArea>(academicAreaPostDTO, academicArea);
 
         //academicArea.Name = academicAreaPostDTO.Name;
 
@@ -186,508 +677,27 @@ app.MapDelete("/AcademicArea/{id}", async (int id, MyDataContext db) =>
 });
 
 //--------------------------
-// -- Teacher API ----------
+// -- ProgramContent API ---
 //--------------------------
 
-app.MapPost("/Teacher/Inicializar", async (MyDataContext db) =>
-{
-    var firstTeacher = new Teacher
-    {
-        Name = "Martín Bernal",
-        Email = "martinbernal@gmail.com",
-        Phone = "291547889"
-    };
-    await db.Teachers.AddAsync(firstTeacher);
-
-    var secondTeacher = new Teacher
-    {
-        Name = "Pablo García",
-        Email = "pablogarcia@gmail.com",
-        Phone = "291542563"
-    };
-    await db.Teachers.AddAsync(secondTeacher);
-
-    await db.SaveChangesAsync();
-
-    return Results.Ok();
-});
-
-app.MapPost("/Teacher", async (TeacherPostDTO teacherPostDTO, MyDataContext db, IMapper mapper) =>
-{
-    var teacher = new Teacher();
-
-    teacher = mapper.Map<Teacher>(teacherPostDTO);
-
-    //teacher.Name = teacherPostDTO.Name;
-    //teacher.Email = teacherPostDTO.Email;
-    //teacher.Phone = teacherPostDTO.Phone;
-
-    await db.Teachers.AddAsync(teacher);
-    await db.SaveChangesAsync();
-
-    return Results.Ok();
-});
-
-app.MapGet("/Teacher/{id}", async (int id, MyDataContext db, IMapper mapper) =>
-{
-    var teacher = await db.Teachers.FindAsync(id);
-
-    if (teacher == null) return Results.NotFound();
-    else
-    {
-        var teacherGetDTO = new TeacherGetDTO();
-
-        teacherGetDTO = mapper.Map<TeacherGetDTO>(teacher);
-
-        //teacherGetDTO.Id = teacher.Id;
-        //teacherGetDTO.Name = teacher.Name;
-        //teacherGetDTO.Email = teacher.Email;
-        //teacherGetDTO.Phone = teacher.Phone;
-
-        return Results.Ok(teacherGetDTO);
-    }
-});
-
-app.MapGet("/Teachers", async (MyDataContext db, IMapper mapper) =>
-{
-    var teachers = await db.Teachers.ToListAsync();
-
-    var teachersListDTO = new List<TeacherGetDTO>();
-
-    foreach (var teacher in teachers)
-    {
-        var teacherGetDTO = new TeacherGetDTO();
-
-        teacherGetDTO = mapper.Map<TeacherGetDTO>(teacher);
-
-        //teacherGetDTO.Id = teacher.Id;
-        //teacherGetDTO.Name = teacher.Name;
-        //teacherGetDTO.Email = teacher.Email;
-        //teacherGetDTO.Phone = teacher.Phone;
-
-        teachersListDTO.Add(teacherGetDTO);
-    }
-
-    return Results.Ok(teachersListDTO);
-});
-
-app.MapGet("/Teacher/{id}/Courses", async (int id, MyDataContext db, IMapper mapper) =>
-{
-    var teacher = db.Teachers.Include(c => c.Courses).Where(t => t.Id == id).FirstOrDefault();
-
-    if (teacher == null) return Results.NotFound();
-    else
-    {
-        var coursesListDTO = new List<CourseGetDTO>();
-
-        foreach (var course in teacher.Courses)
-        {
-            var courseGetDTO = new CourseGetDTO();
-
-            courseGetDTO = mapper.Map<CourseGetDTO>(course);
-
-            //courseGetDTO.Id = course.Id;
-            //courseGetDTO.Name = course.Name;
-            //courseGetDTO.Code = course.Code;
-            //courseGetDTO.Description = course.Description;
-
-            coursesListDTO.Add(courseGetDTO);
-        }
-
-        return Results.Ok(coursesListDTO);
-    }
-});
-
-app.MapPut("/Teacher/{id}", async (int id, TeacherPostDTO teacherPostDTO, MyDataContext db,IMapper mapper) =>
-{
-    var teacher = await db.Teachers.FindAsync(id);
-
-    if (teacher == null) return Results.NotFound();
-    else
-    {
-
-        teacher = mapper.Map<Teacher>(teacherPostDTO);
-
-        //teacher.Name = teacherPostDTO.Name;
-        //teacher.Email = teacherPostDTO.Email;
-        //teacher.Phone = teacherPostDTO.Phone;
-
-        await db.SaveChangesAsync();
-
-        return Results.Ok();
-    };
-});
-
-app.MapDelete("/Teacher/{id}", async (int id, MyDataContext db) =>
-{
-    var teacher = await db.Teachers.FindAsync(id);
-
-    if (teacher == null) return Results.NotFound();
-    else
-    {
-        db.Teachers.Remove(teacher);
-
-        await db.SaveChangesAsync();
-
-        return Results.Ok();
-    };
-});
-
-//--------------------------
-// -- Course API -----------
-//--------------------------
-
-app.MapPost("/Course/Inicializar", async (MyDataContext db) =>
-{
-    var firstCourse = new Course
-    {
-        Name = "Git I",
-        Code = "AA1",
-        Description = "Curso que permite comprender los conceptos básicos del control de versiones, y para ello hace uso de un fremework de versionado concreto que es llamado GIT."
-    };
-    await db.Courses.AddAsync(firstCourse);
-
-    var secondCourse = new Course
-    {
-        Name = "C# I",
-        Code = "AA2",
-        Description = "Curso que permite comprender los conceptos básicos del lenguaje C#."
-    };
-    await db.Courses.AddAsync(secondCourse);
-
-    await db.SaveChangesAsync();
-
-    return Results.Ok();
-});
-
-app.MapPost("/Course", async (CoursePostDTO coursePostDTO, MyDataContext db, IMapper mapper) =>
-{
-    var course = new Course();
-
-    course = mapper.Map<Course>(coursePostDTO);
-    
-    //course.Name = coursePostDTO.Name;
-    //course.Code = coursePostDTO.Code;
-    //course.Description = coursePostDTO.Description;
-
-    await db.Courses.AddAsync(course);
-    await db.SaveChangesAsync();
-
-    return Results.Ok();
-});
-
-app.MapGet("/Course/{id}", async (int id, MyDataContext db, IMapper mapper) =>
-{
-    var course = await db.Courses.FindAsync(id);
-
-    if (course == null) return Results.NotFound();
-    else
-    {
-        var courseGetDTO = new CourseGetDTO();
-
-        courseGetDTO = mapper.Map<CourseGetDTO>(course);
-
-        //courseGetDTO.Id = course.Id;
-        //courseGetDTO.Name = course.Name;
-        //courseGetDTO.Code = course.Code;
-        //courseGetDTO.Description = course.Description;
-
-        return Results.Ok(courseGetDTO);
-    }
-});
-
-app.MapGet("/Courses", async (MyDataContext db, IMapper mapper) =>
-{
-    var courses = await db.Courses.ToListAsync();
-
-    var coursesListDTO = new List<CourseGetDTO>();
-
-    foreach (var course in courses)
-    {
-        var courseGetDTO = new CourseGetDTO();
-
-        courseGetDTO = mapper.Map<CourseGetDTO>(course);
-
-        //courseGetDTO.Id = course.Id;
-        //courseGetDTO.Name = course.Name;
-        //courseGetDTO.Code = course.Code;
-        //courseGetDTO.Description = course.Description;
-
-        coursesListDTO.Add(courseGetDTO);
-    }
-
-    return Results.Ok(coursesListDTO);
-});
-
-app.MapGet("/Course/{id}/Teachers", async (int id, MyDataContext db, IMapper mapper) =>
-{
-    var course = db.Courses.Include(t => t.Teachers).Where(c => c.Id == id).FirstOrDefault();
-
-    if (course == null) return Results.NotFound();
-    else
-    {
-        var teachersListDTO = new List<TeacherGetDTO>();
-
-        foreach (var teacher in course.Teachers)
-        {
-            var teacherGetDTO = new TeacherGetDTO();
-
-            teacherGetDTO = mapper.Map<TeacherGetDTO>(teacher);
-
-            //teacherGetDTO.Id = teacher.Id;
-            //teacherGetDTO.Name = teacher.Name;
-            //teacherGetDTO.Email = teacher.Email;
-            //teacherGetDTO.Phone = teacher.Phone;
-
-            teachersListDTO.Add(teacherGetDTO);
-        }
-
-        return Results.Ok(teachersListDTO);
-    }
-});
-
-app.MapGet("/Course/{id}/ProgramContent", async (int id, MyDataContext db) =>
-{
-    var course = await db.Courses.Include(c => c.ProgramContent).SingleOrDefaultAsync(i => i.Id == id);
-
-    if (course == null) return Results.NotFound();    
-    else 
-        if (course.ProgramContent != null)
-           return Results.Ok(course.ProgramContent.Description);
-        else return Results.NoContent();    
-});
-
-app.MapGet("/Course/{id}/AcademicArea", async (int id, MyDataContext db) => 
-{
-    var course = await db.Courses.Include(c => c.AcademicArea).SingleOrDefaultAsync(i => i.Id == id);
-
-    if (course == null) return Results.NotFound();
-    else
-        if (course.AcademicArea != null)
-        return Results.Ok(course.AcademicArea.Name);
-    else return Results.NoContent();
-});
-
-app.MapPut("/Course/{id}", async (int id, CoursePostDTO coursePostDTO, MyDataContext db, IMapper mapper) =>
-{
-    var course = await db.Courses.FindAsync(id);
-
-    if (course == null) return Results.NotFound();
-    else
-    {
-        course = mapper.Map<Course>(coursePostDTO);
-
-        //course.Name = coursePostDTO.Name;
-        //course.Code = coursePostDTO.Code;
-        //course.Description = coursePostDTO.Description;
-
-        await db.SaveChangesAsync();
-
-        return Results.Ok();
-    };
-});
-
-app.MapDelete("/Course/{id}", async (int id, MyDataContext db) =>
-{
-    var course = await db.Courses.FindAsync(id);
-
-    if (course == null) return Results.NotFound();
-    else
-    {
-        db.Courses.Remove(course);
-
-        await db.SaveChangesAsync();
-
-        return Results.Ok();
-    };
-});
-
-//--------------------------
-// -- Student API ----------
-//--------------------------
-
-app.MapPost("/Student/Inicializar", async (MyDataContext db) =>
-{
-    var firstStudent = new Student
-    {
-        Name = "Sebastián Montemaggiore",
-        Email = "sebastianmontemaggiore@gmail.com",
-        Phone = "291544512"
-    };
-    await db.Students.AddAsync(firstStudent);
-
-    var secondStudent = new Student
-    {
-        Name = "Esteban Gonzalez",
-        Email = "estebangonzalez@gmail.com",
-        Phone = "291544536"
-    };
-    await db.Students.AddAsync(secondStudent);
-
-    await db.SaveChangesAsync();
-
-    return Results.Ok();
-});
-
-app.MapPost("/Student", async (StudentPostDTO studentPostDTO, MyDataContext db, IMapper mapper) => 
-{
-    var student = new Student();
-
-    student = mapper.Map<Student>(studentPostDTO);
-
-    //student.Name = studentPostDTO.Name;
-    //student.Email = studentPostDTO.Email;
-    //student.Phone = studentPostDTO.Phone;
-
-    await db.Students.AddAsync(student);
-    await db.SaveChangesAsync();
-
-    return Results.Ok();
-});
-
-app.MapGet("/Student/{id}", async (int id, MyDataContext db, IMapper mapper) => 
-{
-    var student = await db.Students.FindAsync(id);
-
-    if (student == null) return Results.NotFound();
-    else
-    {
-        var studentGetDTO = new StudentGetDTO();
-
-        studentGetDTO = mapper.Map<StudentGetDTO>(student);
-
-        //studentGetDTO.Id = student.Id;
-        //studentGetDTO.Name = student.Name;
-        //studentGetDTO.Email = student.Email;
-        //studentGetDTO.Phone = student.Phone;
-
-        return Results.Ok(studentGetDTO);
-    }
-});
-
-app.MapGet("/Students", async (MyDataContext db, IMapper mapper) => 
-{
-    var students = await db.Students.ToListAsync();
-
-    var studentsListDTO = new List<StudentGetDTO>();
-
-    foreach (var stdt in students) 
-    {
-        var studentGetDTO = new StudentGetDTO();
-
-        studentGetDTO = mapper.Map<StudentGetDTO>(stdt);
-
-        //studentGetDTO.Id = stdt.Id;
-        //studentGetDTO.Name = stdt.Name;
-        //studentGetDTO.Email = stdt.Email;
-        //studentGetDTO.Phone = stdt.Phone;
-
-        studentsListDTO.Add(studentGetDTO);
-    }
-
-    return Results.Ok(studentsListDTO);
-});
-
-app.MapGet("/Students/{id}/Inscriptions", async (int id, MyDataContext db, IMapper mapper) => 
-{
-    var student = db.Students
-                .Include(i => i.Inscriptions)
-                    .ThenInclude(o => o.OpenCourse)
-                        .ThenInclude(c => c.Course)
-                .Include(i => i.Inscriptions)
-                    .ThenInclude(o => o.OpenCourse)
-                        .ThenInclude(t => t.Teacher)
-                .Where(s => s.Id == id).FirstOrDefault();
-
-    if (student == null) return Results.NotFound();
-    else
-    {
-        var studentInscriptionsGetDTO = new List<StudentInscriptionGetDTO>();
-
-        foreach (var inscription in student.Inscriptions)
-        {
-            var courseGetDTO = new CourseGetDTO();
-
-            courseGetDTO = mapper.Map<CourseGetDTO>(inscription.OpenCourse.Course);
-
-            //courseGetDTO.Id = inscription.OpenCourse.CourseId;
-            //courseGetDTO.Name = inscription.OpenCourse.Course.Name;
-            //courseGetDTO.Code = inscription.OpenCourse.Course.Code;
-            //courseGetDTO.Description = inscription.OpenCourse.Course.Description;
-
-            var teacherGetDTO = new TeacherGetDTO();
-
-            teacherGetDTO = mapper.Map<TeacherGetDTO>(inscription.OpenCourse.Teacher);
-
-            //teacherGetDTO.Id = inscription.OpenCourse.TeacherId;
-            //teacherGetDTO.Name = inscription.OpenCourse.Teacher.Name;
-            //teacherGetDTO.Email = inscription.OpenCourse.Teacher.Email;
-            //teacherGetDTO.Phone = inscription.OpenCourse.Teacher.Phone;
-
-            var studentInscriptionGetDTO = new StudentInscriptionGetDTO();
-
-            studentInscriptionGetDTO.Course = courseGetDTO;
-            studentInscriptionGetDTO.Teacher = teacherGetDTO;
-
-            studentInscriptionsGetDTO.Add(studentInscriptionGetDTO);
-        }
-
-        return Results.Ok(studentInscriptionsGetDTO);
-    }
-});
-
-app.MapPut("/Student/{id}", async (int id, StudentPostDTO studentPostDTO, MyDataContext db, IMapper mapper) => 
-{ 
-    var student = await db.Students.FindAsync(id);
-
-    if (student == null) return Results.NotFound();
-    else 
-    {
-        student = mapper.Map<Student>(studentPostDTO);
-
-        //student.Name = studentPostDTO.Name;
-        //student.Email = studentPostDTO.Email;
-        //student.Phone = studentPostDTO.Phone;
-
-        await db.SaveChangesAsync();
-
-        return Results.Ok();
-    };
-});
-
-app.MapDelete("/Student/{id}", async (int id, MyDataContext db) => 
-{ 
-    var student = await db.Students.FindAsync(id);
-
-    if (student == null) return Results.NotFound();
-    else 
-    {
-        db.Students.Remove(student);
-
-        await db.SaveChangesAsync();
-
-        return Results.Ok();
-    };
-});
-
-
-//--------------------------
-// -- ProgramContent API ----------
-//--------------------------
-
-app.MapPost("/ProgramContent/{courseId}", async (int courseId, ProgramContentPostDTO programContentPostDTO, MyDataContext db) =>
+app.MapPost("/ProgramContent/{courseId}", async (int courseId, ProgramContentPostDTO programContentPostDTO, MyDataContext db, IMapper mapper) =>
 {
     var course = await db.Courses.FindAsync(courseId);
 
     if (course == null) return Results.NotFound();
     else 
     {
-        var programContent = new ProgramContent();
+        //var programContent = new ProgramContent();
 
-        programContent.Description = programContentPostDTO.Description;
-        programContent.CourseId = courseId;
-        programContent.Course = course;
+        var programContent = mapper.Map<ProgramContent>(programContentPostDTO);
 
+        //programContent.Description = programContentPostDTO.Description;
+        //programContent.CourseId = courseId;
+        //programContent.Course = course;
+
+        // El mapeo anterior no actualiza en el objeto programContent a que course esta asociado. Eso es algo que hace el ORM al 
+        //ejecutar la siguiente instrucción. ESTA ES UNA SITUACIÓN EN DONDE EL ORM ACTUALIZA UN OBJETO RELACIONADO AL QUE SE ESTÁ
+        //ACTUALIZANDO GRACIAS A LAS PROPIEDADES DE NAVEGACIÓN.
         course.ProgramContent = programContent;
 
         await db.ProgramContents.AddAsync(programContent);
@@ -697,24 +707,26 @@ app.MapPost("/ProgramContent/{courseId}", async (int courseId, ProgramContentPos
     }    
 });
 
-app.MapGet("/ProgramContent/{programContentId}", async (int programContentId, MyDataContext db) =>
+app.MapGet("/ProgramContent/{programContentId}", async (int programContentId, MyDataContext db, IMapper mapper) =>
 {
     var programContent = await db.ProgramContents.FindAsync(programContentId);
     
     if (programContent == null) return Results.NotFound();
     else
     {
-        var programContentGetDTO = new ProgramContentGetDTO();
+        //var programContentGetDTO = new ProgramContentGetDTO();
 
-        programContentGetDTO.Id = programContent.Id;
-        programContentGetDTO.Description = programContent.Description;
-        programContentGetDTO.CourseId = programContent.CourseId;
+        var programContentGetDTO = mapper.Map<ProgramContentGetDTO>(programContent);
+
+        //programContentGetDTO.Id = programContent.Id;
+        //programContentGetDTO.Description = programContent.Description;
+        //programContentGetDTO.CourseId = programContent.CourseId;
 
         return Results.Ok(programContentGetDTO);
     }
 });
 
-app.MapGet("/ProgramContents", async (MyDataContext db) =>
+app.MapGet("/ProgramContents", async (MyDataContext db, IMapper mapper) =>
 {
     var programContents = await db.ProgramContents.ToListAsync();
 
@@ -722,11 +734,13 @@ app.MapGet("/ProgramContents", async (MyDataContext db) =>
 
     foreach (var pc in programContents)
     {
-        var programContentGetDTO = new ProgramContentGetDTO();
+        //var programContentGetDTO = new ProgramContentGetDTO();
 
-        programContentGetDTO.Id = pc.Id;
-        programContentGetDTO.Description = pc.Description;
-        programContentGetDTO.CourseId = pc.CourseId;
+        var programContentGetDTO = mapper.Map<ProgramContentGetDTO>(pc);
+
+        //programContentGetDTO.Id = pc.Id;
+        //programContentGetDTO.Description = pc.Description;
+        //programContentGetDTO.CourseId = pc.CourseId;
 
         programContentListDTO.Add(programContentGetDTO);
     }

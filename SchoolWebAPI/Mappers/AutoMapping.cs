@@ -3,6 +3,7 @@ using SchoolWebAPI.Entities;
 using SchoolWebAPI.Models.AcademiArea;
 using SchoolWebAPI.Models.Course;
 using SchoolWebAPI.Models.Inscription;
+using SchoolWebAPI.Models.ProgramContent;
 using SchoolWebAPI.Models.Student;
 using SchoolWebAPI.Models.Teacher;
 
@@ -24,7 +25,14 @@ namespace SchoolWebAPI.Mappers
             CreateMap<StudentPostDTO, Student>();
             CreateMap<Student, StudentGetDTO>();
 
-            //CreateMap<Course,Teacher, StudentInscriptionGetDTO>();
+            CreateMap<Inscription, StudentInscriptionGetDTO>()
+                .ForMember(dest => dest.Course, opt => opt.MapFrom(src => src.OpenCourse.Course))
+                .ForMember(dest => dest.Teacher, opt => opt.MapFrom(src => src.OpenCourse.Teacher));
+
+            CreateMap<ProgramContentPostDTO, ProgramContent>();
+            CreateMap<ProgramContent, ProgramContentGetDTO>();
+
+            CreateMap<AcademicArea, AcademicAreaGetDTO>();
         }
     }
 }
