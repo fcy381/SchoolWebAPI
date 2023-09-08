@@ -8,6 +8,8 @@ using SchoolWebAPI.Models.AcademiArea;
 using SchoolWebAPI.Models.ProgramContent;
 using Microsoft.Extensions.DependencyInjection;
 using AutoMapper;
+using SchoolWebAPI.Models.OpenCourses;
+using SchoolWebAPI.Models.Inscription;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -478,8 +480,9 @@ app.MapGet("/Course/{id}/AcademicArea", async (int id, MyDataContext db, IMapper
     else
         if (course.AcademicArea != null)
         {
-        var courseAcademicArea = mapper.Map<AcademicArea>(course.AcademicArea);
-            return Results.Ok(courseAcademicArea); 
+            var courseAcademicAreaGetDTO = mapper.Map<CourseAcademicAreaGetDTO>(course.AcademicArea);
+            
+            return Results.Ok(courseAcademicAreaGetDTO); 
         } else return Results.NoContent();
 });
 
@@ -807,30 +810,33 @@ app.MapPost("/OpenCourse/Course/{courseId}/Teacher/{teacherId}", async (int cour
     return Results.Ok();
 });
 
-app.MapGet("/OpenCourse/Course/{courseId}/Teacher/{teacherId}", async (int courseId, int teacherId, MyDataContext db) =>
+app.MapGet("/OpenCourse/Course/{courseId}/Teacher/{teacherId}", async (int courseId, int teacherId, MyDataContext db, IMapper mapper) =>
 {
     var openCourse = db.OpenCourses.Include(c => c.Course).Include(c => c.Teacher).Where(t => (t.TeacherId == teacherId) && (t.CourseId == courseId)).FirstOrDefault(); 
 
     if (openCourse == null) return Results.BadRequest();
 
-    var openCourseGetDTO = new SchoolWebAPI.Models.OpenCourses.OpenCourseGetDTO();
+    //var openCourseGetDTO = new SchoolWebAPI.Models.OpenCourses.OpenCourseGetDTO();
 
-    var courseGetDTO = new CourseGetDTO();
+    var openCourseGetDTO = mapper.Map<OpenCourseGetDTO>(openCourse);
 
-    courseGetDTO.Id = courseId;
-    courseGetDTO.Name = openCourse.Course.Name;
-    courseGetDTO.Code = openCourse.Course.Code;
-    courseGetDTO.Description = openCourse.Course.Description;
-    
-    var teacherGetDTO = new TeacherGetDTO();
 
-    teacherGetDTO.Id = teacherId;
-    teacherGetDTO.Name = openCourse.Teacher.Name;   
-    teacherGetDTO.Email = openCourse.Teacher.Email; 
-    teacherGetDTO.Phone = openCourse.Teacher.Phone;
+    //var courseGetDTO = new CourseGetDTO();
 
-    openCourseGetDTO.Course = courseGetDTO;
-    openCourseGetDTO.Teacher = teacherGetDTO;
+    //courseGetDTO.Id = courseId;
+    //courseGetDTO.Name = openCourse.Course.Name;
+    //courseGetDTO.Code = openCourse.Course.Code;
+    //courseGetDTO.Description = openCourse.Course.Description;
+
+    //var teacherGetDTO = new TeacherGetDTO();
+
+    //teacherGetDTO.Id = teacherId;
+    //teacherGetDTO.Name = openCourse.Teacher.Name;   
+    //teacherGetDTO.Email = openCourse.Teacher.Email; 
+    //teacherGetDTO.Phone = openCourse.Teacher.Phone;
+
+    //openCourseGetDTO.Course = courseGetDTO;
+    //openCourseGetDTO.Teacher = teacherGetDTO;
 
     return Results.Ok(openCourseGetDTO);
 });
@@ -865,21 +871,7 @@ app.MapPost("/Inscription/Course/{courseId}/Teacher/{teacherId}/Student/{student
     var openCourse = db.OpenCourses.Include(c => c.Course).Include(c => c.Teacher).Where(t => (t.TeacherId == teacherId) && (t.CourseId == courseId)).FirstOrDefault();
 
     if (openCourse == null) return Results.BadRequest();
-
-    var courseGetDTO = new CourseGetDTO();
-
-    courseGetDTO.Id = courseId;
-    courseGetDTO.Name = openCourse.Course.Name;
-    courseGetDTO.Code = openCourse.Course.Code;
-    courseGetDTO.Description = openCourse.Course.Description;
     
-    var teacherGetDTO = new TeacherGetDTO();
-
-    teacherGetDTO.Id = teacherId;
-    teacherGetDTO.Name = openCourse.Teacher.Name;   
-    teacherGetDTO.Email = openCourse.Teacher.Email; 
-    teacherGetDTO.Phone = openCourse.Teacher.Phone;
-
     var inscription = new Inscription();
     
     inscription.CourseId = courseId;
@@ -894,38 +886,40 @@ app.MapPost("/Inscription/Course/{courseId}/Teacher/{teacherId}/Student/{student
     return Results.Ok();
 });
 
-app.MapGet("/Inscription/Course/{courseId}/Teacher/{teacherId}/Student/{studentId}", async (int courseId, int teacherId, int studentId, MyDataContext db) =>
+app.MapGet("/Inscription/Course/{courseId}/Teacher/{teacherId}/Student/{studentId}", async (int courseId, int teacherId, int studentId, MyDataContext db, IMapper mapper) =>
 {
-    var inscription = db.Inscriptions.Include(c => c.OpenCourse).Include(c => c.Student).Where(t => (t.CourseId == courseId) && (t.TeacherId == teacherId) && (t.StudentId == studentId)).FirstOrDefault();
+    var inscription = db.Inscriptions.Include(s => s.Student).Include(oc => oc.OpenCourse).Include(c => c.OpenCourse.Course).Include(t => t.OpenCourse.Teacher).Where(t => (t.CourseId == courseId) && (t.TeacherId == teacherId) && (t.StudentId == studentId)).FirstOrDefault();
 
     if (inscription == null) return Results.BadRequest();
 
-    var courseGetDTO = new CourseGetDTO();
+    //var courseGetDTO = new CourseGetDTO();
 
-    courseGetDTO.Id = courseId;
-    courseGetDTO.Name = inscription.OpenCourse.Course.Name;
-    courseGetDTO.Code = inscription.OpenCourse.Course.Code;
-    courseGetDTO.Description = inscription.OpenCourse.Course.Description;
+    //courseGetDTO.Id = courseId;
+    //courseGetDTO.Name = inscription.OpenCourse.Course.Name;
+    //courseGetDTO.Code = inscription.OpenCourse.Course.Code;
+    //courseGetDTO.Description = inscription.OpenCourse.Course.Description;
 
-    var teacherGetDTO = new TeacherGetDTO();
+    //var teacherGetDTO = new TeacherGetDTO();
 
-    teacherGetDTO.Id = teacherId;
-    teacherGetDTO.Name = inscription.OpenCourse.Teacher.Name;
-    teacherGetDTO.Email = inscription.OpenCourse.Teacher.Email;
-    teacherGetDTO.Phone = inscription.OpenCourse.Teacher.Phone;
+    //teacherGetDTO.Id = teacherId;
+    //teacherGetDTO.Name = inscription.OpenCourse.Teacher.Name;
+    //teacherGetDTO.Email = inscription.OpenCourse.Teacher.Email;
+    //teacherGetDTO.Phone = inscription.OpenCourse.Teacher.Phone;
 
-    var studentGetDTO = new StudentGetDTO();
+    //var studentGetDTO = new StudentGetDTO();
 
-    studentGetDTO.Id = studentId;
-    studentGetDTO.Name = inscription.Student.Name;
-    studentGetDTO.Email = inscription.Student.Email; 
-    studentGetDTO.Phone = inscription.Student.Phone;
+    //studentGetDTO.Id = studentId;
+    //studentGetDTO.Name = inscription.Student.Name;
+    //studentGetDTO.Email = inscription.Student.Email; 
+    //studentGetDTO.Phone = inscription.Student.Phone;
 
-    var inscriptionGetDTO = new SchoolWebAPI.Models.Inscription.InscriptionGetDTO();
+    //var inscriptionGetDTO = new SchoolWebAPI.Models.Inscription.InscriptionGetDTO();
 
-    inscriptionGetDTO.Course = courseGetDTO;
-    inscriptionGetDTO.Teacher = teacherGetDTO;
-    inscriptionGetDTO.Student = studentGetDTO;
+    var inscriptionGetDTO = mapper.Map<InscriptionGetDTO>(inscription);
+
+    //inscriptionGetDTO.Course = courseGetDTO;
+    //inscriptionGetDTO.Teacher = teacherGetDTO;
+    //inscriptionGetDTO.Student = studentGetDTO;
 
     return Results.Ok(inscriptionGetDTO);
 });
