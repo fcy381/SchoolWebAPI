@@ -11,6 +11,8 @@ using AutoMapper;
 using SchoolWebAPI.Models.OpenCourses;
 using SchoolWebAPI.Models.Inscription;
 using SchoolWebAPI.Endpoints;
+using FluentValidation;
+using SchoolWebAPI.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +23,8 @@ builder.Services.AddDbContext<MyDataContext>(opt => opt.UseInMemoryDatabase("Stu
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+builder.Services.AddScoped<IValidator<StudentPostDTO>, StudentPostDTOValidator>();
 
 var app = builder.Build();
 

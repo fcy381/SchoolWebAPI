@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using SchoolWebAPI.Data;
 using SchoolWebAPI.Entities;
@@ -38,23 +39,41 @@ namespace SchoolWebAPI.Endpoints
             })
                 .WithName("CreateFirstStudents")
                 .WithTags("Student API");
-                
-            group.MapPost("/", async (StudentPostDTO studentPostDTO, MyDataContext db, IMapper mapper) =>
-            {               
+
+            //group.MapPost("/", async (StudentPostDTO studentPostDTO, MyDataContext db, IMapper mapper) =>
+            //{               
+            //    var student = mapper.Map<Student>(studentPostDTO);
+
+            //    await db.Students.AddAsync(student);
+            //    await db.SaveChangesAsync();
+
+            //    var studentCreated = mapper.Map<StudentGetDTO>(student);
+
+            //    return Results.CreatedAtRoute("GetStudentById", new { id = student.Id }, studentCreated);                
+            //})
+            //    .WithName("CreateStudent")
+            //    .WithTags("Student API");           
+
+            group.MapPost("/", async (IValidator<StudentPostDTO> validator, StudentPostDTO studentPostDTO, MyDataContext db, IMapper mapper) => 
+            {
+                var validationResult = await validator.ValidateAsync(studentPostDTO);
+                if (!validationResult.IsValid) 
+                { 
+                    return Results.ValidationProblem(validationResult.ToDictionary());
+                }
+
                 var student = mapper.Map<Student>(studentPostDTO);
-                
+
                 await db.Students.AddAsync(student);
                 await db.SaveChangesAsync();
 
                 var studentCreated = mapper.Map<StudentGetDTO>(student);
 
-                return Results.CreatedAtRoute("GetStudentById", new { id = student.Id }, studentCreated);                
+                return Results.CreatedAtRoute("GetStudentById", new { id = student.Id }, studentCreated);
+
             })
                 .WithName("CreateStudent")
-                .WithTags("Student API")
-                .WithDescription("Gets a beer by id")
-                .WithSummary("Gets a beer by id")
-                .WithDisplayName("GetBeerById");
+                .WithTags("Student API");
 
             group.MapGet("/{id}", async (int id, MyDataContext db, IMapper mapper) =>
             {
