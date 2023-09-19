@@ -13,15 +13,23 @@ using SchoolWebAPI.Models.Inscription;
 using SchoolWebAPI.Endpoints;
 using FluentValidation;
 using SchoolWebAPI.Validators;
+using SchoolWebAPI.Repositories.Student.Base;
+using SchoolWebAPI.Repositories.Student;
+using SchoolWebAPI.Repositories.GenericRepository.Base;
+using SchoolWebAPI.Repositories.GenericRepository;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<MyDataContext>(opt => opt.UseInMemoryDatabase("Students"));
 
+builder.Services.AddScoped<IStudentRepository, StudentRepository>();
+
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen();
+
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddScoped<IValidator<StudentPostDTO>, StudentPostDTOValidator>();

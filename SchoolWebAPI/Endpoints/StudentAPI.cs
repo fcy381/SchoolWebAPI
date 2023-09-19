@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SchoolWebAPI.Data;
 using SchoolWebAPI.Entities;
 using SchoolWebAPI.Models.Student;
+using SchoolWebAPI.Repositories.Student.Base;
 
 namespace SchoolWebAPI.Endpoints
 {
@@ -15,7 +16,7 @@ namespace SchoolWebAPI.Endpoints
     {
         public static RouteGroupBuilder MapStudentAPI(this RouteGroupBuilder group)
         {
-            group.MapPost("/initialize", async (MyDataContext db) =>
+            group.MapPost("/initialize", async (IStudentRepository studentRepository) =>
             {
                 var firstStudent = new Student
                 {
@@ -23,7 +24,8 @@ namespace SchoolWebAPI.Endpoints
                     Email = "sebastianmontemaggiore@gmail.com",
                     Phone = "291544512"
                 };
-                await db.Students.AddAsync(firstStudent);
+                await studentRepository.Create(firstStudent);
+                //await db.Students.AddAsync(firstStudent);
 
                 var secondStudent = new Student
                 {
@@ -31,9 +33,11 @@ namespace SchoolWebAPI.Endpoints
                     Email = "estebangonzalez@gmail.com",
                     Phone = "291544536"
                 };
-                await db.Students.AddAsync(secondStudent);
+                await studentRepository.Create(secondStudent);
+                //await db.Students.AddAsync(secondStudent);
 
-                await db.SaveChangesAsync();
+                studentRepository.SaveChanges();
+                //await db.SaveChangesAsync();
 
                 return Results.Ok();
             })
@@ -54,8 +58,11 @@ namespace SchoolWebAPI.Endpoints
             //    .WithName("CreateStudent")
             //    .WithTags("Student API");           
 
-            group.MapPost("/", async (IValidator<StudentPostDTO> validator, StudentPostDTO studentPostDTO, MyDataContext db, IMapper mapper) => 
-            {
+            group.MapPost("/", async (IValidator<StudentPostDTO> validator, 
+                                      StudentPostDTO studentPostDTO, 
+                                      IMapper mapper,
+                                      IStudentRepository studentRepository) => 
+            {                               
                 var validationResult = await validator.ValidateAsync(studentPostDTO);
                 if (!validationResult.IsValid) 
                 { 
@@ -64,8 +71,11 @@ namespace SchoolWebAPI.Endpoints
 
                 var student = mapper.Map<Student>(studentPostDTO);
 
-                await db.Students.AddAsync(student);
-                await db.SaveChangesAsync();
+                await studentRepository.Create(student);
+                studentRepository.SaveChanges();
+
+                //await db.Students.AddAsync(student);
+                //await db.SaveChangesAsync();
 
                 var studentCreated = mapper.Map<StudentGetDTO>(student);
 
@@ -75,9 +85,12 @@ namespace SchoolWebAPI.Endpoints
                 .WithName("CreateStudent")
                 .WithTags("Student API");
 
-            group.MapGet("/{id}", async (int id, MyDataContext db, IMapper mapper) =>
+            group.MapGet("/{id}", async (int id, 
+                                         IMapper mapper,
+                                         IStudentRepository studentRepository) =>
             {
-                var student = await db.Students.FindAsync(id);
+                var student = await studentRepository.GetById(id);
+                //var student = await db.Students.FindAsync(id);
 
                 if (student == null) return Results.NotFound();
                 else
@@ -92,9 +105,11 @@ namespace SchoolWebAPI.Endpoints
                 .WithName("GetStudentById")
                 .WithTags("Student API");
 
-            group.MapGet("/all", async (MyDataContext db, IMapper mapper) =>
+            group.MapGet("/all", (IMapper mapper,
+                                  IStudentRepository studentRepository) =>
             {
-                var students = await db.Students.ToListAsync();
+                var students = studentRepository.GetAll();
+                //var students = await db.Students.ToListAsync();
 
                 var studentsListDTO = new List<StudentGetDTO>();
 
@@ -112,16 +127,20 @@ namespace SchoolWebAPI.Endpoints
                 .WithName("GetAllStudent")
                 .WithTags("Student API");
 
-            group.MapGet("/{id}/inscriptions", async (int id, MyDataContext db, IMapper mapper) =>
+            group.MapGet("/{id}/inscriptions", async (int id, MyDataContext db,
+                                                      IMapper mapper,
+                                                      IStudentRepository studentRepository) =>
             {
-                var student = db.Students
-                            .Include(i => i.Inscriptions)
-                                .ThenInclude(o => o.OpenCourse)
-                                    .ThenInclude(c => c.Course)
-                            .Include(i => i.Inscriptions)
-                                .ThenInclude(o => o.OpenCourse)
-                                    .ThenInclude(t => t.Teacher)
-                            .Where(s => s.Id == id).FirstOrDefault();
+                var student = await studentRepository.GetByIdWithInscriptions(id); 
+
+                //var student = await db.Students
+                //            .Include(i => i.Inscriptions)
+                //                .ThenInclude(o => o.OpenCourse)
+                //                    .ThenInclude(c => c.Course)
+                //            .Include(i => i.Inscriptions)
+                //                .ThenInclude(o => o.OpenCourse)
+                //                    .ThenInclude(t => t.Teacher)
+                //            .Where(s => s.Id == id).FirstOrDefaultAsync();
 
                 if (student == null) return Results.NotFound();
                 else
@@ -141,9 +160,13 @@ namespace SchoolWebAPI.Endpoints
                 .WithName("GetStudentInscriptionsById")
                 .WithTags("Student API");
 
-            group.MapPut("/{id}", async (int id, StudentPostDTO studentPostDTO, MyDataContext db, IMapper mapper) =>
+            group.MapPut("/{id}", async (int id, 
+                                   StudentPostDTO studentPostDTO, 
+                                   IMapper mapper,
+                                   IStudentRepository studentRepository) =>
             {
-                var student = await db.Students.FindAsync(id);
+                var student = await studentRepository.GetById(id);
+                //var student = await db.Students.FindAsync(id);
 
                 if (student == null) return Results.NotFound();
                 else
@@ -154,7 +177,8 @@ namespace SchoolWebAPI.Endpoints
                     // Para que no se cree un nuevo objeto debo utilizar la siguiente sobrecarga del método Map.
                     student = mapper.Map<StudentPostDTO, Student>(studentPostDTO, student);
 
-                    await db.SaveChangesAsync();
+                    studentRepository.SaveChanges();
+                    //await db.SaveChangesAsync();
 
                     return Results.Ok();
                 };
@@ -162,16 +186,20 @@ namespace SchoolWebAPI.Endpoints
                 .WithName("UpdateStudentById")
                 .WithTags("Student API");
 
-            group.MapDelete("/{id}", async (int id, MyDataContext db) =>
+            group.MapDelete("/{id}", async (int id,
+                                            IStudentRepository studentRepository) =>
             {
-                var student = await db.Students.FindAsync(id);
+                var student = await studentRepository.GetById(id);
+                //var student = await db.Students.FindAsync(id);
 
                 if (student == null) return Results.NotFound();
                 else
                 {
-                    db.Students.Remove(student);
+                    await studentRepository.SoftDelete(id);
+                    //db.Students.Remove(student);
 
-                    await db.SaveChangesAsync();
+                    studentRepository.SaveChanges();
+                    //await db.SaveChangesAsync();
 
                     return Results.Ok();
                 };

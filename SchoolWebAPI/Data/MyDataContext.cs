@@ -10,7 +10,7 @@ namespace SchoolWebAPI.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            //    base.OnModelCreating(modelBuilder);
+            //base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Course>()
                 .HasMany(e => e.Teachers)

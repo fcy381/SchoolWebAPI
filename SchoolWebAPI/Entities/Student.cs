@@ -1,14 +1,14 @@
-﻿namespace SchoolWebAPI.Entities
+﻿using SchoolWebAPI.Entities.Base;
+
+namespace SchoolWebAPI.Entities
 {
-    public class Student
+    public class Student: BaseEntity
     {
-        public int Id { get; set; }
+        public string? Name { get; set; }
 
-        public string Name { get; set; }
+        public string? Email { get; set; }
 
-        public string Email { get; set; }
-
-        public string Phone { get; set; }
+        public string? Phone { get; set; }
 
         public List<OpenCourse> OpenCourses { get; } = new();
 
