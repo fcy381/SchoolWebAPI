@@ -186,7 +186,28 @@ namespace SchoolWebAPI.Endpoints
                 .WithName("UpdateStudentById")
                 .WithTags("Student API");
 
-            group.MapDelete("/{id}", async (int id,
+            group.MapDelete("/hard/{id}", async (int id,
+                                            IStudentRepository studentRepository) =>
+            {
+                var student = await studentRepository.GetById(id);
+                //var student = await db.Students.FindAsync(id);
+
+                if (student == null) return Results.NotFound();
+                else
+                {
+                    await studentRepository.SoftDelete(id);
+                    //db.Students.Remove(student);
+
+                    studentRepository.SaveChanges();
+                    //await db.SaveChangesAsync();
+
+                    return Results.Ok();
+                };
+            })
+                .WithName("DeleteStudentById")
+                .WithTags("Student API");
+
+            group.MapDelete("/soft/{id}", async (int id,
                                             IStudentRepository studentRepository) =>
             {
                 var student = await studentRepository.GetById(id);

@@ -25,9 +25,18 @@ namespace SchoolWebAPI.Repositories.GenericRepository
             => await _dbContext.Set<T>()
                 .Where(x => x.IsDeleted == false && x.Id == id) 
                 .FirstOrDefaultAsync();
-        
+
+        public async Task<bool?> WasSoftDeleted(T entity)
+        { 
+            if (entity != null) { return entity.IsDeleted; }
+            else { return null; };           
+        }
+
         public IQueryable<T> GetAll()
-            => _dbContext.Set<T>();
+            => _dbContext.Set<T>().Where(x => x.IsDeleted == false);
+
+        public IQueryable<T> GetAllEvenThoseSoftDeleted()
+            => _dbContext.Set<T>().Where(x => x.IsDeleted == false);
 
         public void Update(T entity) 
             => _dbContext.Set<T>().Update(entity);

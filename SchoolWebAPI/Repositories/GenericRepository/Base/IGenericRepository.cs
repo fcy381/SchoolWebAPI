@@ -8,6 +8,8 @@ namespace SchoolWebAPI.Repositories.GenericRepository.Base
 
         Task<T?> GetById(int id);
 
+        Task<bool?> WasSoftDeleted(T entity);
+
         IQueryable<T> GetAll();
 
         void Update(T entity);
