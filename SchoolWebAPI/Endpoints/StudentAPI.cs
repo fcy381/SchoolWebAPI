@@ -5,6 +5,7 @@ using SchoolWebAPI.Data;
 using SchoolWebAPI.Entities;
 using SchoolWebAPI.Models.Student;
 using SchoolWebAPI.Repositories.Student.Base;
+using SchoolWebAPI.Repositories.UnitOfWork.Base;
 
 namespace SchoolWebAPI.Endpoints
 {
@@ -16,7 +17,9 @@ namespace SchoolWebAPI.Endpoints
     {
         public static RouteGroupBuilder MapStudentAPI(this RouteGroupBuilder group)
         {
-            group.MapPost("/initialize", async (IStudentRepository studentRepository) =>
+            // -- CreateFirstStudents ----------
+
+            group.MapPost("/initialize", async (IUnitOfWork unitOfWork) =>
             {
                 var firstStudent = new Student
                 {
@@ -24,7 +27,8 @@ namespace SchoolWebAPI.Endpoints
                     Email = "sebastianmontemaggiore@gmail.com",
                     Phone = "291544512"
                 };
-                await studentRepository.Create(firstStudent);
+                await unitOfWork.StudentRepository.Create(firstStudent);
+                //await studentRepository.Create(firstStudent);
                 //await db.Students.AddAsync(firstStudent);
 
                 var secondStudent = new Student
@@ -33,10 +37,11 @@ namespace SchoolWebAPI.Endpoints
                     Email = "estebangonzalez@gmail.com",
                     Phone = "291544536"
                 };
-                await studentRepository.Create(secondStudent);
+                await unitOfWork.StudentRepository.Create(secondStudent);
                 //await db.Students.AddAsync(secondStudent);
 
-                studentRepository.SaveChanges();
+                _ = await unitOfWork.Commit();
+                //studentRepository.SaveChanges();
                 //await db.SaveChangesAsync();
 
                 return Results.Ok();
@@ -58,10 +63,12 @@ namespace SchoolWebAPI.Endpoints
             //    .WithName("CreateStudent")
             //    .WithTags("Student API");           
 
+            // -- CreateStudent ----------------
+
             group.MapPost("/", async (IValidator<StudentPostDTO> validator, 
                                       StudentPostDTO studentPostDTO, 
                                       IMapper mapper,
-                                      IStudentRepository studentRepository) => 
+                                      IUnitOfWork unitOfWork) => 
             {                               
                 var validationResult = await validator.ValidateAsync(studentPostDTO);
                 if (!validationResult.IsValid) 
@@ -71,8 +78,8 @@ namespace SchoolWebAPI.Endpoints
 
                 var student = mapper.Map<Student>(studentPostDTO);
 
-                await studentRepository.Create(student);
-                studentRepository.SaveChanges();
+                await unitOfWork.StudentRepository.Create(student);
+                _ = await unitOfWork.Commit();
 
                 //await db.Students.AddAsync(student);
                 //await db.SaveChangesAsync();
@@ -85,11 +92,13 @@ namespace SchoolWebAPI.Endpoints
                 .WithName("CreateStudent")
                 .WithTags("Student API");
 
+            // -- GetStudentById ---------------
+
             group.MapGet("/{id}", async (int id, 
                                          IMapper mapper,
-                                         IStudentRepository studentRepository) =>
+                                         IUnitOfWork unitOfWork) =>
             {
-                var student = await studentRepository.GetById(id);
+                var student = await unitOfWork.StudentRepository.GetById(id);
                 //var student = await db.Students.FindAsync(id);
 
                 if (student == null) return Results.NotFound();
@@ -105,10 +114,12 @@ namespace SchoolWebAPI.Endpoints
                 .WithName("GetStudentById")
                 .WithTags("Student API");
 
+            // -- GetAllStudent ----------------
+
             group.MapGet("/all", (IMapper mapper,
-                                  IStudentRepository studentRepository) =>
+                                  IUnitOfWork unitOfWork) =>
             {
-                var students = studentRepository.GetAll();
+                var students = unitOfWork.StudentRepository.GetAll();
                 //var students = await db.Students.ToListAsync();
 
                 var studentsListDTO = new List<StudentGetDTO>();
@@ -127,11 +138,13 @@ namespace SchoolWebAPI.Endpoints
                 .WithName("GetAllStudent")
                 .WithTags("Student API");
 
+            // -- GetStudentInscriptionsById ---
+
             group.MapGet("/{id}/inscriptions", async (int id, MyDataContext db,
                                                       IMapper mapper,
-                                                      IStudentRepository studentRepository) =>
+                                                      IUnitOfWork unitOfWork) =>
             {
-                var student = await studentRepository.GetByIdWithInscriptions(id); 
+                var student = await unitOfWork.StudentRepository.GetByIdWithInscriptions(id); 
 
                 //var student = await db.Students
                 //            .Include(i => i.Inscriptions)
@@ -160,12 +173,14 @@ namespace SchoolWebAPI.Endpoints
                 .WithName("GetStudentInscriptionsById")
                 .WithTags("Student API");
 
+            // -- UpdateStudentById ------------
+
             group.MapPut("/{id}", async (int id, 
                                    StudentPostDTO studentPostDTO, 
                                    IMapper mapper,
-                                   IStudentRepository studentRepository) =>
+                                   IUnitOfWork unitOfWork) =>
             {
-                var student = await studentRepository.GetById(id);
+                var student = await unitOfWork.StudentRepository.GetById(id);
                 //var student = await db.Students.FindAsync(id);
 
                 if (student == null) return Results.NotFound();
@@ -177,7 +192,7 @@ namespace SchoolWebAPI.Endpoints
                     // Para que no se cree un nuevo objeto debo utilizar la siguiente sobrecarga del método Map.
                     student = mapper.Map<StudentPostDTO, Student>(studentPostDTO, student);
 
-                    studentRepository.SaveChanges();
+                    _ = await unitOfWork.Commit();
                     //await db.SaveChangesAsync();
 
                     return Results.Ok();
@@ -186,46 +201,51 @@ namespace SchoolWebAPI.Endpoints
                 .WithName("UpdateStudentById")
                 .WithTags("Student API");
 
+            // -- HardDeleteStudentById --------
+
             group.MapDelete("/hard/{id}", async (int id,
-                                            IStudentRepository studentRepository) =>
+                                                 IUnitOfWork unitOfWork) =>
             {
-                var student = await studentRepository.GetById(id);
+                var student = await unitOfWork.StudentRepository.GetById(id);
                 //var student = await db.Students.FindAsync(id);
 
                 if (student == null) return Results.NotFound();
                 else
                 {
-                    await studentRepository.SoftDelete(id);
+                    await unitOfWork.StudentRepository.SoftDelete(id);
                     //db.Students.Remove(student);
 
-                    studentRepository.SaveChanges();
+                    //unitOfWork.Dispose();
+                    _ = await unitOfWork.Commit();
                     //await db.SaveChangesAsync();
 
                     return Results.Ok();
                 };
             })
-                .WithName("DeleteStudentById")
+                .WithName("HardDeleteStudentById")
                 .WithTags("Student API");
 
+            // -- SoftDeleteStudentById --------
+
             group.MapDelete("/soft/{id}", async (int id,
-                                            IStudentRepository studentRepository) =>
+                                                 IUnitOfWork unitOfWork) =>
             {
-                var student = await studentRepository.GetById(id);
+                var student = await unitOfWork.StudentRepository.GetById(id);
                 //var student = await db.Students.FindAsync(id);
 
                 if (student == null) return Results.NotFound();
                 else
                 {
-                    await studentRepository.SoftDelete(id);
+                    await unitOfWork.StudentRepository.SoftDelete(id);
                     //db.Students.Remove(student);
 
-                    studentRepository.SaveChanges();
+                    _ = await unitOfWork.Commit();
                     //await db.SaveChangesAsync();
 
                     return Results.Ok();
                 };
             })
-                .WithName("DeleteStudentById")
+                .WithName("SoftDeleteStudentById")
                 .WithTags("Student API");
 
             return group;

@@ -17,12 +17,15 @@ using SchoolWebAPI.Repositories.Student.Base;
 using SchoolWebAPI.Repositories.Student;
 using SchoolWebAPI.Repositories.GenericRepository.Base;
 using SchoolWebAPI.Repositories.GenericRepository;
+using SchoolWebAPI.Repositories.UnitOfWork.Base;
+using SchoolWebAPI.Repositories.UnitOfWork;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<MyDataContext>(opt => opt.UseInMemoryDatabase("Students"));
 
 builder.Services.AddScoped<IStudentRepository, StudentRepository>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

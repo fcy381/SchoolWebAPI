@@ -66,8 +66,5 @@ namespace SchoolWebAPI.Repositories.GenericRepository
             
             return true;
         }
-
-        public async void SaveChanges() 
-            => await _dbContext.SaveChangesAsync();
     }
 }

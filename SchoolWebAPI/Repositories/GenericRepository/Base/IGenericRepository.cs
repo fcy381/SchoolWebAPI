@@ -16,8 +16,6 @@ namespace SchoolWebAPI.Repositories.GenericRepository.Base
 
         Task<bool> HardDelete(int id);
 
-        Task<bool> SoftDelete(int id);
-
-        void SaveChanges();
+        Task<bool> SoftDelete(int id);       
     }
 }
