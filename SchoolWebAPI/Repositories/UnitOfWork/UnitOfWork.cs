@@ -8,21 +8,21 @@ namespace SchoolWebAPI.Repositories.UnitOfWork
 {
     public class UnitOfWork: IUnitOfWork
     {
-        private readonly DbContext _context;
+        private readonly MyDataContext _myDataContext;
         public IStudentRepository StudentRepository { get; }
 
-        public UnitOfWork(MyDataContext context, IStudentRepository studentRepository) 
+        public UnitOfWork(MyDataContext myDataContext, IStudentRepository studentRepository) 
         {
             StudentRepository = studentRepository;
-            _context = context;
+            _myDataContext = myDataContext;
         }
 
         public async Task<int> Commit()
-        => await _context.SaveChangesAsync();
+        => await _myDataContext.SaveChangesAsync();
 
         public void Dispose()
-        { 
-           _context.Dispose();
+        {
+            _myDataContext.Dispose();
         }
     }
 }

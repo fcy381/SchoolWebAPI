@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using SchoolWebAPI.Data;
 using SchoolWebAPI.Entities.Base;
 using SchoolWebAPI.Repositories.GenericRepository.Base;
 
@@ -7,22 +8,22 @@ namespace SchoolWebAPI.Repositories.GenericRepository
 {
     public abstract class GenericRepository<T>: IGenericRepository<T> where T : BaseEntity  
     {
-        private readonly DbContext _dbContext;
-        protected DbSet<T> Entities => _dbContext.Set<T>();
+        private readonly MyDataContext _myDataContext;
+        protected DbSet<T> Entities => _myDataContext.Set<T>();
 
-        public GenericRepository(DbContext dbContext)
+        public GenericRepository(MyDataContext myDataContext)
         {
-            _dbContext = dbContext;
+            _myDataContext = myDataContext;
         }
 
         public async Task<T> Create(T entity)
         {
-            EntityEntry<T> insertedValue = await _dbContext.Set<T>().AddAsync(entity);
+            EntityEntry<T> insertedValue = await _myDataContext.Set<T>().AddAsync(entity);
             return insertedValue.Entity;
         }
 
         public async Task<T?> GetById(int id) 
-            => await _dbContext.Set<T>()
+            => await _myDataContext.Set<T>()
                 .Where(x => x.IsDeleted == false && x.Id == id) 
                 .FirstOrDefaultAsync();
 
@@ -33,13 +34,13 @@ namespace SchoolWebAPI.Repositories.GenericRepository
         }
 
         public IQueryable<T> GetAll()
-            => _dbContext.Set<T>().Where(x => x.IsDeleted == false);
+            => _myDataContext.Set<T>().Where(x => x.IsDeleted == false);
 
         public IQueryable<T> GetAllEvenThoseSoftDeleted()
-            => _dbContext.Set<T>().Where(x => x.IsDeleted == false);
+            => _myDataContext.Set<T>().Where(x => x.IsDeleted == false);
 
         public void Update(T entity) 
-            => _dbContext.Set<T>().Update(entity);
+            => _myDataContext.Set<T>().Update(entity);
         
         public async Task<bool> HardDelete(int id)
         {
@@ -48,7 +49,7 @@ namespace SchoolWebAPI.Repositories.GenericRepository
             if (entity is null)
                 return false;
 
-            _dbContext.Set<T>().Remove(entity);
+            _myDataContext.Set<T>().Remove(entity);
             return true;
         }
 
@@ -62,7 +63,7 @@ namespace SchoolWebAPI.Repositories.GenericRepository
             entity.IsDeleted = true;
             entity.DeletedTimeUtc = DateTime.UtcNow;
 
-            _dbContext.Set<T>().Update(entity);
+            _myDataContext.Set<T>().Update(entity);
             
             return true;
         }
