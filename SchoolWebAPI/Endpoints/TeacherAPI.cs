@@ -91,7 +91,7 @@ namespace SchoolWebAPI.Endpoints
                 .WithName("GetAllTeachers")
                 .WithTags("Teacher API");
 
-            group.MapGet("/{id}/courses", async (int id, MyDataContext db, IMapper mapper) =>
+            group.MapGet("/{id}/courses", async (Guid id, MyDataContext db, IMapper mapper) =>
             {
                 var teacher = db.Teachers.Include(c => c.Courses).Where(t => t.Id == id).FirstOrDefault();
 

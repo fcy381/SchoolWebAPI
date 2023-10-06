@@ -10,7 +10,7 @@ namespace SchoolWebAPI.Repositories.Student
         {                
         }
 
-        public async Task<SchoolWebAPI.Entities.Student?> GetByIdWithInscriptions(int id) 
+        public async Task<SchoolWebAPI.Entities.Student?> GetByIdWithInscriptions(Guid id) 
             => await Entities.Include(i => i.Inscriptions)
                                 .ThenInclude(o => o.OpenCourse)
                                     .ThenInclude(c => c.Course)

@@ -94,7 +94,7 @@ namespace SchoolWebAPI.Endpoints
 
             // -- GetStudentById ---------------
 
-            group.MapGet("/{id}", async (int id, 
+            group.MapGet("/{id}", async (Guid id, 
                                          IMapper mapper,
                                          IUnitOfWork unitOfWork) =>
             {
@@ -140,7 +140,7 @@ namespace SchoolWebAPI.Endpoints
 
             // -- GetStudentInscriptionsById ---
 
-            group.MapGet("/{id}/inscriptions", async (int id, MyDataContext db,
+            group.MapGet("/{id}/inscriptions", async (Guid id, MyDataContext db,
                                                       IMapper mapper,
                                                       IUnitOfWork unitOfWork) =>
             {
@@ -175,7 +175,7 @@ namespace SchoolWebAPI.Endpoints
 
             // -- UpdateStudentById ------------
 
-            group.MapPut("/{id}", async (int id, 
+            group.MapPut("/{id}", async (Guid id, 
                                    StudentPostDTO studentPostDTO, 
                                    IMapper mapper,
                                    IUnitOfWork unitOfWork) =>
@@ -203,7 +203,7 @@ namespace SchoolWebAPI.Endpoints
 
             // -- HardDeleteStudentById --------
 
-            group.MapDelete("/hard/{id}", async (int id,
+            group.MapDelete("/hard/{id}", async (Guid id,
                                                  IUnitOfWork unitOfWork) =>
             {
                 var student = await unitOfWork.StudentRepository.GetById(id);
@@ -227,7 +227,7 @@ namespace SchoolWebAPI.Endpoints
 
             // -- SoftDeleteStudentById --------
 
-            group.MapDelete("/soft/{id}", async (int id,
+            group.MapDelete("/soft/{id}", async (Guid id,
                                                  IUnitOfWork unitOfWork) =>
             {
                 var student = await unitOfWork.StudentRepository.GetById(id);

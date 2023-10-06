@@ -106,7 +106,7 @@ namespace SchoolWebAPI.Endpoints
                 .WithName("GetAllAcademicsAreas")
                 .WithTags("Academic Area API");
 
-            group.MapGet("/{id}/courses", async (int id, MyDataContext db, IMapper mapper) =>
+            group.MapGet("/{id}/courses", async (Guid id, MyDataContext db, IMapper mapper) =>
             {
                 var academicArea = db.AcademicAreas
                             .Include(i => i.Courses)

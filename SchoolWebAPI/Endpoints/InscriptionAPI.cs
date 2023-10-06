@@ -14,7 +14,7 @@ namespace SchoolWebAPI.Endpoints
 
         public static RouteGroupBuilder MapInscriptionAPI(this RouteGroupBuilder group)
         {
-            group.MapPost("/course/{courseId}/teacher/{teacherId}/student/{studentId}", async (int courseId, int teacherId, int studentId, MyDataContext db, IMapper mapper) =>
+            group.MapPost("/course/{courseId}/teacher/{teacherId}/student/{studentId}", async (Guid courseId, Guid teacherId, Guid studentId, MyDataContext db, IMapper mapper) =>
             {
                 //Verificar antes si ya existe esa terna.
 
@@ -44,7 +44,7 @@ namespace SchoolWebAPI.Endpoints
                  .WithName("CreateInscription")
                  .WithTags("Inscription API");
 
-            group.MapGet("/course/{courseId}/teacher/{teacherId}/student/{studentId}", async (int courseId, int teacherId, int studentId, MyDataContext db, IMapper mapper) =>
+            group.MapGet("/course/{courseId}/teacher/{teacherId}/student/{studentId}", async (Guid courseId, Guid teacherId, Guid studentId, MyDataContext db, IMapper mapper) =>
             {
                 var inscription = db.Inscriptions.Include(s => s.Student).Include(oc => oc.OpenCourse).Include(c => c.OpenCourse.Course).Include(t => t.OpenCourse.Teacher).Where(t => (t.CourseId == courseId) && (t.TeacherId == teacherId) && (t.StudentId == studentId)).FirstOrDefault();
 
@@ -57,7 +57,7 @@ namespace SchoolWebAPI.Endpoints
                 .WithName("GetInscriptionByIds")
                 .WithTags("Inscription API");
 
-            group.MapDelete("/course/{courseId}/teacher/{teacherId}/student/{studentId}", async (int courseId, int teacherId, int studentId, MyDataContext db) =>
+            group.MapDelete("/course/{courseId}/teacher/{teacherId}/student/{studentId}", async (Guid courseId, Guid teacherId, Guid studentId, MyDataContext db) =>
             {
                 var inscription = await db.Inscriptions.FindAsync(courseId, teacherId, studentId);
 

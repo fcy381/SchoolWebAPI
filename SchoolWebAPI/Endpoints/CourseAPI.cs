@@ -91,7 +91,7 @@ namespace SchoolWebAPI.Endpoints
                 .WithName("GetAllCourses")
                 .WithTags("Course API");
 
-            group.MapGet("/{id}/Teachers", async (int id, MyDataContext db, IMapper mapper) =>
+            group.MapGet("/{id}/Teachers", async (Guid id, MyDataContext db, IMapper mapper) =>
             {
                 var course = db.Courses.Include(t => t.Teachers).Where(c => c.Id == id).FirstOrDefault();
 
@@ -115,7 +115,7 @@ namespace SchoolWebAPI.Endpoints
                 .WithName("GetCourseTeachersById")
                 .WithTags("Course API");
 
-            group.MapGet("/{id}/ProgramContent", async (int id, MyDataContext db, IMapper mapper) =>
+            group.MapGet("/{id}/ProgramContent", async (Guid id, MyDataContext db, IMapper mapper) =>
             {
                 var course = await db.Courses.Include(c => c.ProgramContent).SingleOrDefaultAsync(i => i.Id == id);
 
@@ -132,7 +132,7 @@ namespace SchoolWebAPI.Endpoints
                 .WithName("GetCourseProgramContentById")
                 .WithTags("Course API");
 
-            group.MapGet("/{id}/AcademicArea", async (int id, MyDataContext db, IMapper mapper) =>
+            group.MapGet("/{id}/AcademicArea", async (Guid id, MyDataContext db, IMapper mapper) =>
             {
                 var course = await db.Courses.Include(c => c.AcademicArea).SingleOrDefaultAsync(i => i.Id == id);
 

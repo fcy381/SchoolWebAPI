@@ -1,12 +1,14 @@
-﻿namespace SchoolWebAPI.Entities
-{
-    public class Inscription
-    {
-        public int CourseId { get; set; }
+﻿using SchoolWebAPI.Entities.Base;
 
-        public int TeacherId { get; set; }
+namespace SchoolWebAPI.Entities
+{
+    public class Inscription : BaseEntity
+    {
+        public Guid CourseId { get; set; }
+
+        public Guid TeacherId { get; set; }
         
-        public int StudentId { get; set; }
+        public Guid StudentId { get; set; }
 
         public Student Student { get; set; } = null!;
 

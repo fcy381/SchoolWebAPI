@@ -1,10 +1,11 @@
-﻿using System.Reflection.Metadata;
+﻿using SchoolWebAPI.Entities.Base;
+using System.Reflection.Metadata;
 
 namespace SchoolWebAPI.Entities
 {
-    public class Course
+    public class Course : BaseEntity
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         public string Name { get; set; }
 
@@ -18,7 +19,7 @@ namespace SchoolWebAPI.Entities
 
         public ProgramContent?   ProgramContent { get; set; }
 
-        public int? AcademicAreaId { get; set; } 
+        public Guid? AcademicAreaId { get; set; } 
 
         public AcademicArea? AcademicArea { get; set; } 
     }

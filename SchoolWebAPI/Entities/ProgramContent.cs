@@ -1,12 +1,14 @@
-﻿namespace SchoolWebAPI.Entities
+﻿using SchoolWebAPI.Entities.Base;
+
+namespace SchoolWebAPI.Entities
 {
-    public class ProgramContent
+    public class ProgramContent : BaseEntity
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         public string Description { get; set; }
 
-        public int CourseId { get; set; }
+        public Guid CourseId { get; set; }
 
         public Course Course { get; set;} = null!;
     }

@@ -1,10 +1,12 @@
-﻿namespace SchoolWebAPI.Entities
-{
-    public class OpenCourse
-    {
-        public int CourseId { get; set; }
+﻿using SchoolWebAPI.Entities.Base;
 
-        public int TeacherId { get; set; }
+namespace SchoolWebAPI.Entities
+{
+    public class OpenCourse : BaseEntity
+    {
+        public Guid CourseId { get; set; }
+
+        public Guid TeacherId { get; set; }
 
         public Course Course { get; set; } = null!; 
 

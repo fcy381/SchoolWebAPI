@@ -6,7 +6,7 @@ namespace SchoolWebAPI.Repositories.GenericRepository.Base
     {
         Task<T> Create(T entity);
 
-        Task<T?> GetById(int id);
+        Task<T?> GetById(params object[] keys);
 
         Task<bool?> WasSoftDeleted(T entity);
 
@@ -14,8 +14,8 @@ namespace SchoolWebAPI.Repositories.GenericRepository.Base
 
         void Update(T entity);
 
-        Task<bool> HardDelete(int id);
+        Task<bool> HardDelete(Guid id);
 
-        Task<bool> SoftDelete(int id);       
+        Task<bool> SoftDelete(Guid id);       
     }
 }

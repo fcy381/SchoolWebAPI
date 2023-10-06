@@ -4,6 +4,6 @@ namespace SchoolWebAPI.Repositories.Student.Base
 {
     public interface IStudentRepository: IGenericRepository<SchoolWebAPI.Entities.Student>
     {
-        Task<SchoolWebAPI.Entities.Student?> GetByIdWithInscriptions(int id);      
+        Task<SchoolWebAPI.Entities.Student?> GetByIdWithInscriptions(Guid id);      
     }
 }

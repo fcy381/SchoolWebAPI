@@ -22,10 +22,18 @@ namespace SchoolWebAPI.Repositories.GenericRepository
             return insertedValue.Entity;
         }
 
-        public async Task<T?> GetById(int id) 
-            => await _myDataContext.Set<T>()
-                .Where(x => x.IsDeleted == false && x.Id == id) 
-                .FirstOrDefaultAsync();
+        public async Task<T?> GetById(params object[] keys)
+        {
+            var entity = await _myDataContext.Set<T>().FindAsync(keys);
+
+            if (entity != null)
+                if (entity.IsDeleted == false)
+                {
+                    return entity;
+                };
+
+            return null;
+        }
 
         public async Task<bool?> WasSoftDeleted(T entity)
         { 
@@ -42,7 +50,7 @@ namespace SchoolWebAPI.Repositories.GenericRepository
         public void Update(T entity) 
             => _myDataContext.Set<T>().Update(entity);
         
-        public async Task<bool> HardDelete(int id)
+        public async Task<bool> HardDelete(Guid id)
         {
             T? entity = await GetById(id);
 
@@ -53,7 +61,7 @@ namespace SchoolWebAPI.Repositories.GenericRepository
             return true;
         }
 
-        public async Task<bool> SoftDelete(int id)
+        public async Task<bool> SoftDelete(Guid id)
         {
             T? entity = await GetById(id);
 

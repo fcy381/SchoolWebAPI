@@ -14,7 +14,7 @@ namespace SchoolWebAPI.Endpoints
 
         public static RouteGroupBuilder MapOpenCourseAPI(this RouteGroupBuilder group)
         {
-            group.MapPost("/course/{courseId}/teacher/{teacherId}", async (int courseId, int teacherId, MyDataContext db, IMapper mapper) =>
+            group.MapPost("/course/{courseId}/teacher/{teacherId}", async (Guid courseId, Guid teacherId, MyDataContext db, IMapper mapper) =>
             {
                 // Vertificar antes si ya existe esa dupla.
 
@@ -25,6 +25,14 @@ namespace SchoolWebAPI.Endpoints
                 var teacher = await db.Teachers.FindAsync(teacherId);
 
                 if (teacher == null) return Results.BadRequest();
+
+                // ¿existe la dupla?
+                // Si la respuesta es SI entonces
+                //    ¿está borrado temporalmente?
+                //        Si la respuesta es NO entences Bad Request
+                //        Si la respuesta es SI entonces Bad Request(mje --> Verificar estado de borrado del recurso) 
+                // Si la respuesta es NO entonces se procede a crear el recurso        
+
 
                 OpenCourse openCourse = new OpenCourse();
 
@@ -43,7 +51,7 @@ namespace SchoolWebAPI.Endpoints
                 .WithName("CreateOpenCourse")
                 .WithTags("Open Course API");
 
-            group.MapGet("/course/{courseId}/teacher/{teacherId}", async (int courseId, int teacherId, MyDataContext db, IMapper mapper) =>
+            group.MapGet("/course/{courseId}/teacher/{teacherId}", async (Guid courseId, Guid teacherId, MyDataContext db, IMapper mapper) =>
             {
                 var openCourse = db.OpenCourses.Include(c => c.Course).Include(c => c.Teacher).Where(t => (t.TeacherId == teacherId) && (t.CourseId == courseId)).FirstOrDefault();
 
