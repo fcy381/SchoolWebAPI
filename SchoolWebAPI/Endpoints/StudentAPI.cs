@@ -1,10 +1,8 @@
 ﻿using AutoMapper;
 using FluentValidation;
-using Microsoft.EntityFrameworkCore;
 using SchoolWebAPI.Data;
 using SchoolWebAPI.Entities;
 using SchoolWebAPI.Models.Student;
-using SchoolWebAPI.Repositories.Student.Base;
 using SchoolWebAPI.Repositories.UnitOfWork.Base;
 
 namespace SchoolWebAPI.Endpoints
@@ -114,7 +112,7 @@ namespace SchoolWebAPI.Endpoints
                 .WithName("GetStudentById")
                 .WithTags("Student API");
 
-            // -- GetAllStudent ----------------
+            // -- GetAllStudens ----------------
 
             group.MapGet("/all", (IMapper mapper,
                                   IUnitOfWork unitOfWork) =>
